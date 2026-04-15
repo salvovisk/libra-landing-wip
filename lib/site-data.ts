@@ -74,18 +74,20 @@ export type PersonaProblemItem = {
 };
 
 export const navItems = [
-  { label: "Funzionalità", href: "#funzionalita" },
+  { label: "Come funziona", href: "#funzionalita" },
+  { label: "Per chi è", href: "#persona-switcher" },
   { label: "Prezzi", href: "#prezzi" },
-  { label: "Risorse", href: "#risorse" },
+  { label: "Demo", href: "#demo" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 export const heroCopy = {
   badge: "Versione 2.0",
-  kicker: "Buste paga, INPS e documenti in un'unica piattaforma",
+  kicker: "Software per buste paga colf, contributi INPS e documenti in un'unica piattaforma",
   title: "Il software per gestire il lavoro domestico",
   highlight: "con precisione operativa",
   description:
-    "Libra Colf centralizza buste paga, contributi INPS, archivio documentale e attivita ricorrenti in una piattaforma progettata per un'operativita chiara, continua e verificabile.",
+    "Libra Colf centralizza buste paga per colf e badanti, contributi INPS, archivio documentale e attività ricorrenti in una piattaforma pensata per famiglie, CAF e studi professionali.",
 };
 
 export const valueReasonsCopy: {

@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
-import { ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import { type MouseEvent } from "react";
 
+import { OPEN_BOOKING_MODAL_EVENT } from "@/components/demo-booking-modal";
 import { heroCopy } from "@/lib/site-data";
-import Link from "next/link";
 
 export function Hero() {
   const rotateX = useSpring(useMotionValue(3), { stiffness: 110, damping: 16 });
@@ -63,16 +63,17 @@ export function Hero() {
             {heroCopy.description}
           </p>
           <div className="mt-12 flex flex-col gap-4 sm:flex-row">
-            <button className="inline-flex items-center justify-center gap-3 rounded-2xl bg-primary px-7 py-4 text-base font-bold text-white shadow-card transition hover:-translate-y-0.5">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent(OPEN_BOOKING_MODAL_EVENT))}
+              className="inline-flex items-center justify-center gap-3 rounded-2xl bg-primary px-7 py-4 text-base font-bold text-white shadow-card transition hover:-translate-y-0.5"
+            >
               Ottieni una demo gratuita
             </button>
             <Link href="#funzionalita" className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 px-7 py-4 text-base font-bold text-primary backdrop-blur transition hover:bg-white">
               Scopri di più
             </Link>
-
           </div>
-
-
         </motion.div>
 
         <motion.div
@@ -99,7 +100,7 @@ export function Hero() {
             />
           </motion.div>
         </motion.div>
-      </div >
-    </section >
+      </div>
+    </section>
   );
 }

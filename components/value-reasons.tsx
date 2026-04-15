@@ -6,7 +6,7 @@ import { valueReasonsCopy } from "@/lib/site-data";
 
 export function ValueReasons() {
   return (
-    <section className="px-6 py-10 sm:py-14">
+    <section id="vantaggi" className="px-6 py-10 sm:py-14">
       <div className="mx-auto max-w-[1500px] rounded-[40px] bg-[#162233] px-6 py-12 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-8 lg:px-10 lg:py-14">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-balance text-4xl font-extrabold tracking-[-0.05em] text-white sm:text-5xl">

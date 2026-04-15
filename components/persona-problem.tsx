@@ -25,7 +25,7 @@ export function PersonaProblem({ persona }: PersonaProblemProps) {
   const content = personaProblemCopy.content[persona];
 
   return (
-    <section className="px-6 py-12 sm:py-16">
+    <section id="persona-problem" className="px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-4xl">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.26em] text-primary/65">

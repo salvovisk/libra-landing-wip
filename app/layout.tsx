@@ -19,21 +19,26 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Libra Colf | Gestione professionale del lavoro domestico",
+  title: "Libra Colf | Software per lavoro domestico, buste paga e INPS",
   description:
-    "Libra Colf semplifica buste paga, contributi INPS, archiviazione e gestione documentale per famiglie, CAF e studi professionali.",
+    "Software per gestire lavoro domestico, buste paga colf e badanti, contributi INPS e documenti. Pensato per famiglie, CAF e studi professionali.",
+  alternates: {
+    canonical: "/"
+  },
   keywords: [
     "Libra Colf",
     "lavoro domestico",
     "buste paga colf",
     "INPS colf",
+    "software lavoro domestico",
+    "badanti",
     "software CAF lavoro domestico",
     "gestione badanti"
   ],
   openGraph: {
-    title: "Libra Colf | Gestione professionale del lavoro domestico",
+    title: "Libra Colf | Software per lavoro domestico, buste paga e INPS",
     description:
-      "Una piattaforma SaaS ad alta precisione per famiglie e professionisti che gestiscono lavoro domestico, payroll e INPS.",
+      "Software per famiglie, CAF e studi che gestiscono colf e badanti: buste paga, contributi INPS e documenti in un unico flusso.",
     locale: "it_IT",
     type: "website",
     siteName: "Libra Colf",
@@ -48,9 +53,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Libra Colf | Gestione professionale del lavoro domestico",
+    title: "Libra Colf | Software per lavoro domestico, buste paga e INPS",
     description:
-      "Payroll, contributi INPS, archivio e portale clienti per privati e studi professionali.",
+      "Buste paga colf e badanti, contributi INPS, documenti e gestione operativa per famiglie e professionisti.",
     images: ["/dashboard.jpg"]
   }
 };

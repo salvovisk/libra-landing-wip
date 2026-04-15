@@ -5,11 +5,25 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { navItems, type Persona } from "@/lib/site-data";
 
 type NavbarProps = {
   persona: Persona;
   onPersonaChange: (persona: Persona) => void;
+};
+
+const NAV_RANGE_MAP: Record<string, string[]> = {
+  "#funzionalita": ["funzionalita"],
+  "#persona-switcher": [
+    "persona-switcher",
+    "persona-problem",
+    "strumenti",
+    "testimonianze",
+  ],
+  "#prezzi": ["prezzi"],
+  "#demo": ["demo"],
+  "#faq": ["faq", "cta-finale"],
 };
 
 export function Navbar({ persona, onPersonaChange }: NavbarProps) {
@@ -42,37 +56,14 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
 
         return element ? { href: item.href, element } : null;
       })
-      .filter((section): section is { href: string; element: HTMLElement } => Boolean(section));
+      .filter((section): section is { href: string; element: HTMLElement } => Boolean(section))
+      .sort((left, right) => left.element.offsetTop - right.element.offsetTop);
 
     const personaSection = document.getElementById("persona-switcher");
 
     if (!sections.length && !personaSection) return;
 
-    const updateState = () => {
-      if (sections.length) {
-        const triggerLine = window.scrollY + 180;
-
-        if (triggerLine < sections[0].element.offsetTop) {
-          setActiveHref(null);
-        } else {
-          let nextActive: string | null = null;
-
-          for (let index = 0; index < sections.length; index += 1) {
-            const current = sections[index];
-            const next = sections[index + 1];
-            const currentTop = current.element.offsetTop;
-            const nextTop = next?.element.offsetTop ?? Number.POSITIVE_INFINITY;
-
-            if (triggerLine >= currentTop && triggerLine < nextTop) {
-              nextActive = current.href;
-              break;
-            }
-          }
-
-          setActiveHref(nextActive);
-        }
-      }
-
+    const updateLayoutState = () => {
       if (personaSection) {
         const rect = personaSection.getBoundingClientRect();
         const passedSwitcher = rect.bottom <= 92;
@@ -87,15 +78,95 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
       if (window.innerWidth >= 1024) {
         setMobileOpen(false);
       }
+
+      const activationOffset = 140;
+      const scrollPosition = window.scrollY + activationOffset;
+      const viewportBottom = window.scrollY + window.innerHeight;
+      const pageBottom = document.documentElement.scrollHeight - 24;
+
+      if (viewportBottom >= pageBottom) {
+        setActiveHref("#faq");
+        return;
+      }
+
+      const ranges = navItems
+        .map((item, index) => {
+          const ids = NAV_RANGE_MAP[item.href] ?? [item.href.replace("#", "")];
+          const ownedElements = ids
+            .map((id) => document.getElementById(id))
+            .filter((element): element is HTMLElement => Boolean(element));
+
+          if (!ownedElements.length) return null;
+
+          const start = Math.min(
+            ...ownedElements.map(
+              (element) => element.getBoundingClientRect().top + window.scrollY
+            )
+          );
+
+          const nextItem = navItems[index + 1];
+          const nextStart = nextItem
+            ? (() => {
+                const nextIds = NAV_RANGE_MAP[nextItem.href] ?? [
+                  nextItem.href.replace("#", ""),
+                ];
+                const nextElements = nextIds
+                  .map((id) => document.getElementById(id))
+                  .filter((element): element is HTMLElement => Boolean(element));
+
+                if (!nextElements.length) return Number.POSITIVE_INFINITY;
+
+                return Math.min(
+                  ...nextElements.map(
+                    (element) => element.getBoundingClientRect().top + window.scrollY
+                  )
+                );
+              })()
+            : Number.POSITIVE_INFINITY;
+
+          return {
+            href: item.href,
+            start,
+            end: nextStart,
+          };
+        })
+        .filter(
+          (
+            range
+          ): range is {
+            href: string;
+            start: number;
+            end: number;
+          } => Boolean(range)
+        );
+
+      if (!ranges.length) {
+        setActiveHref(null);
+        return;
+      }
+
+      if (scrollPosition < ranges[0].start) {
+        setActiveHref(null);
+        return;
+      }
+
+      const currentRange =
+        ranges.find(
+          (range) => scrollPosition >= range.start && scrollPosition < range.end
+        ) ??
+        [...ranges].reverse().find((range) => scrollPosition >= range.start) ??
+        ranges[0];
+
+      setActiveHref(currentRange?.href ?? sections[0]?.href ?? null);
     };
 
-    updateState();
-    window.addEventListener("scroll", updateState, { passive: true });
-    window.addEventListener("resize", updateState);
+    updateLayoutState();
+    window.addEventListener("scroll", updateLayoutState, { passive: true });
+    window.addEventListener("resize", updateLayoutState);
 
     return () => {
-      window.removeEventListener("scroll", updateState);
-      window.removeEventListener("resize", updateState);
+      window.removeEventListener("scroll", updateLayoutState);
+      window.removeEventListener("resize", updateLayoutState);
     };
   }, []);
 
@@ -109,8 +180,8 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
       <nav className="pointer-events-auto w-full max-w-[1200px] rounded-[28px] border border-white/70 bg-white/70 shadow-soft backdrop-blur-xl ring-1 ring-inset ring-black/5">
         <div className="flex min-h-[76px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-4 lg:gap-10">
-            <a href="#" className="shrink-0 text-2xl font-[800] tracking-[-0.04em] text-primary">
-              Libra Colf
+            <a href="#" className="shrink-0" aria-label="Libra Colf">
+              <BrandLogo />
             </a>
             <div className="hidden items-center gap-2 lg:flex">
               {navItems.map((item) => (
@@ -169,10 +240,6 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
               ) : null}
             </AnimatePresence>
 
-            <button className="hidden items-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-card transition duration-200 hover:bg-[#0a3478] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 sm:inline-flex">
-              Accedi
-            </button>
-
             <button
               onClick={() => setMobileOpen((open) => !open)}
               aria-expanded={mobileOpen}
@@ -210,12 +277,6 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
                       {item.label}
                     </a>
                   ))}
-                </div>
-
-                <div className="mt-4">
-                  <button className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-[#0a3478]">
-                    Accedi
-                  </button>
                 </div>
               </div>
             </motion.div>

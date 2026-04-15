@@ -66,7 +66,7 @@ export function PersonaBento({ persona }: PersonaBentoProps) {
   const [primary, topRight, bottomLeft, bottomCenter, bottomRight] = cards;
 
   return (
-    <section id="funzionalita" className="px-6 py-16 sm:py-20">
+    <section id="strumenti" className="px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.26em] text-primary/70">
