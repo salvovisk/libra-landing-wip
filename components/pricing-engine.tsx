@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Minus } from "lucide-react";
+import { Check, ChevronDown, Loader2, Minus } from "lucide-react";
 
 import {
   pricingEngineCopy,
@@ -28,11 +28,13 @@ const fadeUp = {
 
 function PriceDisplay({
   amount,
+  monthlyAmount,
   contactOnly,
   featured,
   billingCycle,
 }: {
   amount: string | null;
+  monthlyAmount: string | null;
   contactOnly?: boolean;
   featured?: boolean;
   billingCycle: Billing;
@@ -71,7 +73,13 @@ function PriceDisplay({
           /{billingCycle === "monthly" ? "mese" : "anno"}
         </span>
       </div>
-
+      {billingCycle === "yearly" && monthlyAmount && (
+        <p className={`mt-1 text-sm ${featured ? "text-blue-100/60" : "text-muted"}`}>
+          <span className="line-through">€{monthlyAmount}/mese</span>
+          {" · "}
+          <span className={`font-semibold ${featured ? "text-white/80" : "text-emerald"}`}>-20%</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -200,12 +208,53 @@ function MobileCompareList({
   );
 }
 
+function useCheckout() {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
+
+  async function handleCheckout(plan: PricingEnginePlan, billingCycle: Billing) {
+    if (plan.contactOnly) return;
+    const hasPriceId = billingCycle === "monthly"
+      ? plan.stripePriceIdMonthly
+      : plan.stripePriceIdYearly;
+    if (!hasPriceId) return;
+
+    setLoadingId(plan.id);
+    setErrorId(null);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: plan.id, billingCycle }),
+      });
+      const data: { ok: boolean; url?: string; error?: string } = await res.json();
+
+      if (!data.ok || !data.url) {
+        setErrorId(plan.id);
+        setTimeout(() => setErrorId(null), 4000);
+        return;
+      }
+
+      window.location.assign(data.url);
+    } catch {
+      setErrorId(plan.id);
+      setTimeout(() => setErrorId(null), 4000);
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
+  return { handleCheckout, loadingId, errorId };
+}
+
 export function PricingEngine({
   persona,
   billingCycle,
   onBillingCycleChange,
 }: PricingEngineProps) {
   const [compareOpen, setCompareOpen] = useState(false);
+  const { handleCheckout, loadingId, errorId } = useCheckout();
 
   const plans = pricingEngineCopy.plans[persona];
   const compareCategories = pricingEngineCopy.compare[persona];
@@ -274,11 +323,27 @@ export function PricingEngine({
                 <motion.article
                   key={plan.id}
                   layout
-                  className={`flex min-h-[560px] flex-col rounded-[40px] border p-8 ${plan.featured
+                  className={`relative flex min-h-[560px] flex-col rounded-[40px] border p-8 ${plan.featured
                     ? "border-[#18499b] bg-[linear-gradient(180deg,#0d3f92_0%,#0b2f6d_100%)] text-white shadow-[0_26px_80px_rgba(11,59,136,0.22)]"
                     : "border-slate-200/90 bg-[linear-gradient(180deg,#ffffff_0%,#f3f7fc_100%)] text-ink shadow-[0_18px_60px_rgba(15,23,42,0.08)] ring-1 ring-inset ring-black/5"
                     }`}
                 >
+                  {plan.badge && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[40px]">
+                      <div
+                        className={`absolute py-2.5 text-[11px] font-extrabold uppercase tracking-[0.16em] shadow-sm ${plan.featured ? "bg-white/25 text-white" : "bg-emerald text-white"}`}
+                        style={{
+                          top: 36,
+                          right: -44,
+                          width: 180,
+                          textAlign: "center",
+                          transform: "rotate(45deg)",
+                        }}
+                      >
+                        {plan.badge}
+                      </div>
+                    </div>
+                  )}
                   <div className="min-h-[140px]">
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -289,14 +354,6 @@ export function PricingEngine({
                           {plan.name}
                         </h3>
                       </div>
-                      {plan.badge ? (
-                        <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${plan.featured ? "bg-white/15 text-white" : "bg-primary text-white"
-                            }`}
-                        >
-                          {plan.badge}
-                        </span>
-                      ) : null}
                     </div>
                     <p className={`mt-4 text-sm leading-6 ${plan.featured ? "text-blue-100/80" : "text-muted"}`}>
                       {plan.description}
@@ -305,6 +362,7 @@ export function PricingEngine({
 
                   <PriceDisplay
                     amount={amount}
+                    monthlyAmount={plan.monthly}
                     contactOnly={plan.contactOnly}
                     featured={plan.featured}
                     billingCycle={billingCycle}
@@ -326,14 +384,41 @@ export function PricingEngine({
                     ))}
                   </ul>
 
-                  <button
-                    className={`mt-8 rounded-[22px] px-5 py-4 text-sm font-bold transition ${plan.featured
-                      ? "bg-white text-primary hover:bg-slate-50"
-                      : "bg-primary text-white hover:-translate-y-0.5 hover:bg-[#0a3478]"
-                      }`}
-                  >
-                    {plan.cta}
-                  </button>
+                  {plan.contactOnly ? (
+                    <a
+                      href="mailto:info@libracolf.it?subject=Richiesta%20Enterprise"
+                      className={`mt-8 flex items-center justify-center rounded-[22px] px-5 py-4 text-sm font-bold transition ${plan.featured
+                        ? "bg-white text-primary hover:bg-slate-50"
+                        : "bg-primary text-white hover:-translate-y-0.5 hover:bg-[#0a3478]"
+                        }`}
+                    >
+                      {plan.cta}
+                    </a>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => handleCheckout(plan, billingCycle)}
+                        disabled={loadingId === plan.id}
+                        aria-busy={loadingId === plan.id}
+                        className={`mt-8 flex w-full items-center justify-center gap-2 rounded-[22px] px-5 py-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${plan.featured
+                          ? "bg-white text-primary hover:bg-slate-50"
+                          : "bg-primary text-white hover:-translate-y-0.5 hover:bg-[#0a3478]"
+                          }`}
+                      >
+                        {loadingId === plan.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Caricamento...</span>
+                          </>
+                        ) : plan.cta}
+                      </button>
+                      {errorId === plan.id && (
+                        <p className="mt-2 text-center text-xs text-red-400">
+                          Errore durante l&apos;avvio del pagamento. Riprova.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </motion.article>
               );
             })}
@@ -353,11 +438,27 @@ export function PricingEngine({
                 return (
                   <article
                     key={`mobile-${plan.id}`}
-                    className={`flex min-h-[520px] w-[86vw] max-w-[360px] shrink-0 snap-start flex-col rounded-[36px] border p-7 ${plan.featured
+                    className={`relative flex min-h-[520px] w-[86vw] max-w-[360px] shrink-0 snap-start flex-col rounded-[36px] border p-7 ${plan.featured
                       ? "border-[#18499b] bg-[linear-gradient(180deg,#0d3f92_0%,#0b2f6d_100%)] text-white shadow-[0_24px_70px_rgba(11,59,136,0.22)]"
                       : "border-slate-200/90 bg-[linear-gradient(180deg,#ffffff_0%,#f3f7fc_100%)] text-ink shadow-[0_18px_60px_rgba(15,23,42,0.08)] ring-1 ring-inset ring-black/5"
                       }`}
                   >
+                    {plan.badge && (
+                      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]">
+                        <div
+                          className={`absolute px-10 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] ${plan.featured ? "bg-white/20 text-white" : "bg-emerald text-white"}`}
+                          style={{
+                            top: 24,
+                            right: -32,
+                            width: 130,
+                            textAlign: "center",
+                            transform: "rotate(45deg)",
+                          }}
+                        >
+                          {plan.badge}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -368,14 +469,6 @@ export function PricingEngine({
                             {plan.name}
                           </h3>
                         </div>
-                        {plan.badge ? (
-                          <span
-                            className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${plan.featured ? "bg-white/15 text-white" : "bg-primary text-white"
-                              }`}
-                          >
-                            {plan.badge}
-                          </span>
-                        ) : null}
                       </div>
                       <p className={`mt-4 text-sm leading-6 ${plan.featured ? "text-blue-100/80" : "text-muted"}`}>
                         {plan.description}
@@ -384,6 +477,7 @@ export function PricingEngine({
 
                     <PriceDisplay
                       amount={amount}
+                      monthlyAmount={plan.monthly}
                       contactOnly={plan.contactOnly}
                       featured={plan.featured}
                       billingCycle={billingCycle}
@@ -405,14 +499,41 @@ export function PricingEngine({
                       ))}
                     </ul>
 
-                    <button
-                      className={`mt-8 rounded-[22px] px-5 py-4 text-sm font-bold transition ${plan.featured
+                  {plan.contactOnly ? (
+                    <a
+                      href="mailto:info@libracolf.it?subject=Richiesta%20Enterprise"
+                      className={`mt-8 flex items-center justify-center rounded-[22px] px-5 py-4 text-sm font-bold transition ${plan.featured
                         ? "bg-white text-primary hover:bg-slate-50"
                         : "bg-primary text-white hover:bg-[#0a3478]"
                         }`}
                     >
                       {plan.cta}
-                    </button>
+                    </a>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => handleCheckout(plan, billingCycle)}
+                        disabled={loadingId === plan.id}
+                        aria-busy={loadingId === plan.id}
+                        className={`mt-8 flex w-full items-center justify-center gap-2 rounded-[22px] px-5 py-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${plan.featured
+                          ? "bg-white text-primary hover:bg-slate-50"
+                          : "bg-primary text-white hover:bg-[#0a3478]"
+                          }`}
+                      >
+                        {loadingId === plan.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Caricamento...</span>
+                          </>
+                        ) : plan.cta}
+                      </button>
+                      {errorId === plan.id && (
+                        <p className="mt-2 text-center text-xs text-red-400">
+                          Errore durante l&apos;avvio del pagamento. Riprova.
+                        </p>
+                      )}
+                    </div>
+                  )}
                   </article>
                 );
               })}

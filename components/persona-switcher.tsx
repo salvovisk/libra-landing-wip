@@ -14,10 +14,10 @@ export function PersonaSwitcher({ persona, onChange }: PersonaSwitcherProps) {
   return (
     <section id="persona-switcher" className="py-10 sm:py-14">
       <div className="mx-auto flex max-w-7xl flex-col items-center px-6 text-center">
-        <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary/40">
+        <p className="mb-4 text-sm font-extrabold uppercase tracking-[0.24em] text-primary/55">
           Seleziona il profilo
         </p>
-        <p className="mb-6 max-w-xl text-base font-medium leading-7 text-muted sm:text-lg">
+        <p className="mb-8 max-w-xl text-xl font-semibold leading-8 text-ink sm:text-2xl">
           Scegli il tuo profilo per vedere le funzionalita piu rilevanti per te.
         </p>
         <div className="relative inline-grid w-full max-w-[900px] grid-cols-2 rounded-[28px] border border-white/70 bg-white/80 p-1 shadow-soft backdrop-blur-xl ring-1 ring-inset ring-black/5">

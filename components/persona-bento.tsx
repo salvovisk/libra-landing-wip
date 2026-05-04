@@ -23,11 +23,9 @@ function BentoCard({ card }: { card: PersonaBentoCard }) {
   return (
     <motion.article
       layout
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.18 }}
       className={`h-full rounded-[24px] px-8 py-8 sm:px-10 sm:py-10 ${
         primary
-          ? "bg-primary text-white shadow-[0_22px_60px_rgba(11,59,136,0.18)]"
+          ? "bg-primary text-white"
           : "bg-[#e9f0ff] text-ink"
       }`}
     >

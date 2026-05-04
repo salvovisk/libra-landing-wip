@@ -100,6 +100,11 @@ export function Footer() {
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-slate-200/80 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <p>© 2026 Libra Colf. Tutti i diritti riservati.</p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <a href="/privacy" className="transition hover:text-primary">Privacy Policy</a>
+          <a href="/termini" className="transition hover:text-primary">Termini e Condizioni</a>
+          <a href="/privacy#cookie" className="transition hover:text-primary">Cookie Policy</a>
+        </div>
       </div>
     </footer>
   );

@@ -48,16 +48,7 @@ export function PersonaProblem({ persona }: PersonaProblemProps) {
                 viewport={{ once: true, amount: 0.35 }}
                 className="flex h-full flex-col bg-[#F8FAFC] px-6 py-7 sm:px-7 sm:py-8"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="font-mono text-sm font-semibold tracking-[0.24em] text-[#00377e]">
-                    {(index + 1).toString().padStart(2, "0")}
-                  </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">
-                    {pain.label}
-                  </span>
-                </div>
-
-                <h3 className="mt-10 max-w-[16ch] text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.045em] text-ink sm:text-[2.05rem]">
+                <h3 className="max-w-[16ch] text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.045em] text-ink sm:text-[2.05rem]">
                   {pain.title}
                 </h3>
 

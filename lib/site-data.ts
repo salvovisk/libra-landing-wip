@@ -38,6 +38,9 @@ export type PricingEnginePlan = {
   note?: string;
   contactOnly?: boolean;
   featureSummary: string[];
+  stripePriceIdMonthly?: string;
+  stripePriceIdYearly?: string;
+  trialDays?: number;
 };
 
 export type PricingCompareValue = boolean | "minus" | "contact" | string;
@@ -77,7 +80,6 @@ export const navItems = [
   { label: "Come funziona", href: "#funzionalita" },
   { label: "Per chi è", href: "#persona-switcher" },
   { label: "Prezzi", href: "#prezzi" },
-  { label: "Demo", href: "#demo" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -89,6 +91,12 @@ export const heroCopy = {
   description:
     "Libra Colf centralizza buste paga per colf e badanti, contributi INPS, archivio documentale e attività ricorrenti in una piattaforma pensata per famiglie, CAF e studi professionali.",
 };
+
+export const heroStats = [
+  { value: "1.240+", label: "famiglie attive" },
+  { value: "0", label: "errori di calcolo" },
+  { value: "CCNL 2024", label: "sempre aggiornato" },
+];
 
 export const valueReasonsCopy: {
   title: string;
@@ -175,15 +183,6 @@ export const workflowCopy: {
         "Prima di ogni scadenza trimestrale ricevi una notifica con il bollettino già calcolato e pronto da pagare.",
       imageSrc: "/documenti.jpg",
       imageAlt: "Archivio documentale con bollettini e documenti pronti",
-    },
-    {
-      id: "year-end",
-      step: "05",
-      headline: "Fine anno: Certificazione Unica già pronta",
-      subtext:
-        "A gennaio la CU è disponibile automaticamente per la tua dichiarazione dei redditi.",
-      imageSrc: "/pagina-buste-paga-annuali.jpg",
-      imageAlt: "Schermata riepilogativa annuale con documenti pronti",
     },
   ],
 };
@@ -489,7 +488,7 @@ export const pricingEngineCopy: {
   billing: {
     monthly: "Mensile",
     yearly: "Annuale",
-    yearlyBadge: "-%",
+    yearlyBadge: "-20%",
   },
   saveCopy: {
     private: "Risparmia fino al 25%",
@@ -504,13 +503,16 @@ export const pricingEngineCopy: {
           "Per chi ha una collaboratrice e vuole gestire tutto senza stress",
         monthly: "4,99",
         yearly: "44,90",
-        cta: "Inizia con Base",
+        cta: "Prova gratis 30 giorni",
         note: "1 rapporto di lavoro",
         featureSummary: [
           "1 rapporto",
           "Buste paga automatiche",
           "Bollettini INPS",
         ],
+        stripePriceIdMonthly: "price_1TTMwHB0QWhiSWCbGk2eniSh",
+        stripePriceIdYearly: "price_1TTMwHB0QWhiSWCb4LLVLFgx",
+        trialDays: 30,
       },
       {
         id: "private-premium",
@@ -520,13 +522,15 @@ export const pricingEngineCopy: {
         yearly: "49,90",
         cta: "Inizia con Premium",
         featured: true,
-        badge: "Più scelto",
+        badge: "Consigliato",
         note: "Base + notifiche WhatsApp",
         featureSummary: [
           "WhatsApp mensile",
           "INPS automatica",
           "Assistente AI",
         ],
+        stripePriceIdMonthly: "price_1TTMwIB0QWhiSWCbz44lQLRS",
+        stripePriceIdYearly: "price_1TTMwIB0QWhiSWCbAfeodbp4",
       },
     ],
     pro: [
@@ -537,13 +541,16 @@ export const pricingEngineCopy: {
           "Inizia a gestire facilmente i rapporti di lavoro domestici dei tuoi assistiti.",
         monthly: "8,90",
         yearly: "64,90",
-        cta: "Inizia con Base",
+        cta: "Prova gratis 30 giorni",
         note: "fino a 5 rapporti",
         featureSummary: [
           "Gestione fino a 5 RDL",
           "Area normativa",
           "Servizi INPS",
         ],
+        stripePriceIdMonthly: "price_1TTMwJB0QWhiSWCb2fSJGY6w",
+        stripePriceIdYearly: "price_1TTMwJB0QWhiSWCb84XatMXU",
+        trialDays: 30,
       },
       {
         id: "pro-premium",
@@ -554,13 +561,15 @@ export const pricingEngineCopy: {
         yearly: "169,90",
         cta: "Cresci con Premium",
         featured: true,
-        badge: "Più scelto",
+        badge: "Consigliato",
         note: "fino a 25 rapporti",
         featureSummary: [
           "Simulazione costi",
           "Inquadramento corretto",
           "Workflow più rapidi",
         ],
+        stripePriceIdMonthly: "price_1TTMwJB0QWhiSWCbH79CNK3D",
+        stripePriceIdYearly: "price_1TTMwKB0QWhiSWCbUYQLSptr",
       },
       {
         id: "pro-premium-plus",
@@ -576,6 +585,8 @@ export const pricingEngineCopy: {
           "Allineamento RDL",
           "Assistente AI",
         ],
+        stripePriceIdMonthly: "price_1TTMwKB0QWhiSWCb5TgZspw0",
+        stripePriceIdYearly: "price_1TTMwLB0QWhiSWCbqP4xHauE",
       },
       {
         id: "pro-enterprise",
@@ -742,3 +753,24 @@ export const resourceItems = [
       "Sessioni dedicate a payroll, INPS e gestione massiva del portfolio clienti.",
   },
 ];
+
+// --- Stripe helpers (server-side only) ---
+
+export function resolvePriceId(planId: string, billingCycle: Billing): string | null {
+  for (const plans of Object.values(pricingEngineCopy.plans)) {
+    const plan = plans.find((p) => p.id === planId);
+    if (!plan) continue;
+    return billingCycle === "monthly"
+      ? (plan.stripePriceIdMonthly ?? null)
+      : (plan.stripePriceIdYearly ?? null);
+  }
+  return null;
+}
+
+export function getTrialDays(planId: string): number | undefined {
+  for (const plans of Object.values(pricingEngineCopy.plans)) {
+    const plan = plans.find((p) => p.id === planId);
+    if (plan) return plan.trialDays;
+  }
+  return undefined;
+}

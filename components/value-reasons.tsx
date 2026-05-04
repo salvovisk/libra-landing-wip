@@ -7,11 +7,11 @@ import { valueReasonsCopy } from "@/lib/site-data";
 export function ValueReasons() {
   return (
     <section id="vantaggi" className="px-6 py-10 sm:py-14">
-      <div className="mx-auto max-w-[1500px] rounded-[40px] bg-[#162233] px-6 py-12 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-8 lg:px-10 lg:py-14">
+      <div className="mx-auto max-w-[1500px] rounded-[40px] border border-slate-200/80 bg-white px-6 py-12 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8 lg:px-10 lg:py-14">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-balance text-4xl font-extrabold tracking-[-0.05em] text-white sm:text-5xl">
-            {valueReasonsCopy.title}{" "}
-            <span className="text-[#b7c8ff]">{valueReasonsCopy.highlight}</span> per 4 motivi
+          <h2 className="text-balance text-4xl font-extrabold tracking-[-0.05em] text-ink sm:text-5xl">
+            {valueReasonsCopy.title} {''}
+            {valueReasonsCopy.highlight} per 4 motivi
           </h2>
         </div>
 
@@ -23,15 +23,15 @@ export function ValueReasons() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.32, delay: index * 0.05 }}
-              className="rounded-[28px] bg-[#243041] p-7 lg:p-8"
+              className="rounded-[28px] border border-slate-100 bg-[#F5F8FF] p-7 lg:p-8"
             >
-              <div className="text-5xl font-extrabold tracking-[-0.06em] text-[#b7c8ff] lg:text-6xl">
+              <div className="text-5xl font-extrabold tracking-[-0.06em] text-primary/25 lg:text-6xl">
                 {reason.index}
               </div>
-              <h3 className="mt-6 text-[1.9rem] font-extrabold leading-tight tracking-[-0.04em] text-white">
+              <h3 className="mt-6 text-[1.9rem] font-extrabold leading-tight tracking-[-0.04em] text-ink">
                 {reason.title}
               </h3>
-              <p className="mt-4 max-w-[28ch] text-base leading-8 text-[#afbdd5]">
+              <p className="mt-4 max-w-[28ch] text-base leading-8 text-slate-600">
                 {reason.description}
               </p>
             </motion.article>

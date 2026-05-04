@@ -5,7 +5,7 @@ import { animate, AnimatePresence, motion, useMotionValue, useScroll, useTransfo
 import { useEffect, useRef, useState } from "react";
 
 import { workflowCopy } from "@/lib/site-data";
-import { Bell, CalendarDays, CheckCircle2, Download, Euro, FileText, FolderArchive, Send, Stamp, UserCircle2 } from "lucide-react";
+import { Bell, CalendarDays, CheckCircle2, Euro, FileText, Send, UserCircle2 } from "lucide-react";
 type Step = {
   id: string;
   step: string;
@@ -38,12 +38,6 @@ const STEPS: Step[] = [
     headline: "Ricevi il promemoria per i bollettini INPS",
     subtext: "Prima di ogni scadenza trimestrale ricevi una notifica con il bollettino già calcolato e pronto da pagare."
   },
-  {
-    id: "05",
-    step: "05",
-    headline: "Fine anno: Certificazione Unica già pronta",
-    subtext: "A gennaio la CU è disponibile automaticamente per la tua dichiarazione dei redditi."
-  }
 ];
 
 
@@ -169,7 +163,7 @@ export function WorkflowSection() {
           </div>
 
           {/* RIGHT — sticky glass theater */}
-          <div className="hidden lg:block lg:sticky lg:top-32 lg:self-start h-[580px]">
+          <div className="hidden lg:block lg:sticky lg:top-32 lg:self-start h-[420px]">
             <Theater active={activeIndex} total={STEPS.length} />
           </div>
         </div>
@@ -209,7 +203,7 @@ function Theater({
         <span className="tabular-nums text-slate-400">0{total}</span>
       </div>
 
-      <div className="absolute inset-0 z-20 flex items-center justify-center p-8">
+      <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={active}
@@ -217,13 +211,12 @@ function Theater({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.96 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-sm"
+            className="w-full max-w-md"
           >
             {active === 0 && <Panel1 />}
             {active === 1 && <Panel2 />}
             {active === 2 && <Panel3 />}
             {active === 3 && <Panel4 />}
-            {active === 4 && <Panel5 />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -513,66 +506,3 @@ function Panel4() {
   );
 }
 
-function Panel5() {
-  return (
-    <div className="relative flex items-center justify-center">
-      <div className="relative h-56 w-56">
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute inset-0 rounded-2xl border border-white/50 bg-white/60 backdrop-blur-sm shadow-md"
-            style={{ zIndex: i }}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: i * -8, x: i * 6, opacity: 1 - i * 0.2 }}
-            transition={{ delay: 0.1 + i * 0.15, duration: 0.6 }}
-          />
-        ))}
-
-        <motion.div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl border border-white/70 bg-white p-5 shadow-xl"
-          style={{ transform: "translate(18px, -24px)" }}
-          initial={{ y: 0 }}
-          animate={{ y: [-24, -30, -24] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <FolderArchive className="h-10 w-10 text-[#00377e]" />
-          <div className="mt-2 text-xs font-semibold text-slate-800">CU 2026</div>
-          <div className="text-[10px] text-slate-400">Certificazione Unica</div>
-
-          <motion.div
-            className="mt-3 flex items-center gap-1.5 rounded-full bg-[#00377e] px-3 py-1.5 text-[10px] font-medium text-white shadow-md"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: [0, -3, 0], opacity: 1 }}
-            transition={{ opacity: { delay: 0.9 }, y: { delay: 1.1, duration: 1.6, repeat: Infinity } }}
-          >
-            <Download className="h-3 w-3" />
-            Scarica
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="absolute -right-6 -top-6 z-20 flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-[#00377e]/60 bg-white/80 backdrop-blur-md"
-          initial={{ scale: 0, rotate: -60 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 14 }}
-        >
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <svg viewBox="0 0 100 100" className="h-full w-full">
-              <defs>
-                <path id="seal-circle" d="M 50 50 m -38 0 a 38 38 0 1 1 76 0 a 38 38 0 1 1 -76 0" />
-              </defs>
-              <text className="fill-[#00377e]/70 text-[9px] font-semibold tracking-widest">
-                <textPath href="#seal-circle">• UFFICIALE • LIBRA • 2026 </textPath>
-              </text>
-            </svg>
-          </motion.div>
-          <Stamp className="h-6 w-6 text-[#00377e]" />
-        </motion.div>
-      </div>
-    </div>
-  );
-}

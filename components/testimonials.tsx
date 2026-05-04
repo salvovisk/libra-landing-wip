@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { CheckCircle2, Star } from "lucide-react";
-import { motion } from "framer-motion";
 
 type Testimonial = {
   id: string;
@@ -62,32 +62,12 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-function TestimonialCard({
-  testimonial,
-  index,
-  mobile = false,
-}: {
-  testimonial: Testimonial;
-  index: number;
-  mobile?: boolean;
-}) {
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.28 }}
-      transition={{ duration: 0.42, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      className={`break-inside-avoid rounded-[24px] border border-slate-100 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.1)] ${
-        mobile ? "min-w-[84vw] max-w-[84vw] snap-center sm:min-w-[460px] sm:max-w-[460px]" : "mb-5"
-      }`}
-    >
+    <article className="w-[320px] shrink-0 rounded-[24px] border border-slate-100 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:w-[360px]">
       <div className="flex items-center gap-1" aria-hidden="true">
         {Array.from({ length: 5 }).map((_, idx) => (
-          <Star
-            key={idx}
-            className="h-4 w-4 fill-[#facc15] text-[#facc15]"
-            strokeWidth={2}
-          />
+          <Star key={idx} className="h-4 w-4 fill-[#facc15] text-[#facc15]" strokeWidth={2} />
         ))}
       </div>
 
@@ -108,11 +88,14 @@ function TestimonialCard({
           <p className="mt-1 text-sm text-slate-500">{testimonial.role}</p>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }
 
 export function Testimonials() {
+  const [paused, setPaused] = useState(false);
+  const doubled = [...testimonials, ...testimonials];
+
   return (
     <section className="bg-slate-50 py-20 sm:py-24" id="testimonianze">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
@@ -124,21 +107,19 @@ export function Testimonials() {
             Ecco cosa dicono i datori di lavoro che hanno semplificato la loro burocrazia con Libra.
           </p>
         </div>
+      </div>
 
-        <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard
-              key={`mobile-${testimonial.id}`}
-              testimonial={testimonial}
-              index={index}
-              mobile
-            />
-          ))}
-        </div>
-
-        <div className="mt-14 hidden gap-5 md:block md:columns-2 md:[column-fill:_balance] lg:columns-3">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard key={testimonial.id} testimonial={testimonial} index={index} />
+      <div
+        className="mt-14 overflow-hidden"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div
+          className="flex gap-5 animate-marquee"
+          style={{ animationPlayState: paused ? "paused" : "running" }}
+        >
+          {doubled.map((testimonial, i) => (
+            <TestimonialCard key={`${testimonial.id}-${i}`} testimonial={testimonial} />
           ))}
         </div>
       </div>

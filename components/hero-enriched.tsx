@@ -7,7 +7,7 @@ import { type MouseEvent } from "react";
 
 import { heroCopy } from "@/lib/site-data";
 
-export function Hero() {
+export function HeroEnriched() {
   const rotateX = useSpring(useMotionValue(3), { stiffness: 110, damping: 16 });
   const rotateY = useSpring(useMotionValue(-7), { stiffness: 110, damping: 16 });
   const translateX = useSpring(useMotionValue(0), { stiffness: 120, damping: 18 });
@@ -36,27 +36,33 @@ export function Hero() {
   }
 
   return (
-    <section className="relative overflow-hidden px-6 pb-16 pt-6 sm:pb-24 sm:pt-8 lg:min-h-[calc(100svh-6.5rem)] lg:py-10">
-      {/* Grid pattern */}
-      <div className="absolute inset-x-0 top-0 h-[620px] bg-hero-grid bg-[size:54px_54px] opacity-30 [mask-image:linear-gradient(180deg,white,transparent)]" />
+    <section className="relative overflow-hidden px-6 pb-20 pt-6 sm:pb-28 sm:pt-8 lg:min-h-[calc(100svh-6.5rem)] lg:py-10">
+      {/* Grid pattern — taller & more visible */}
+      <div className="absolute inset-x-0 top-0 h-[820px] bg-hero-grid bg-[size:54px_54px] opacity-40 [mask-image:linear-gradient(180deg,white,transparent)]" />
 
-      {/* Geometric decorations */}
+      {/* Radial glow behind left column */}
+      <div className="pointer-events-none absolute left-[10%] top-[40%] h-[400px] w-[400px] rounded-full bg-primary/[0.04] blur-[100px]" />
+
+      {/* Horizontal accent line */}
+      <div className="pointer-events-none absolute inset-x-0 top-[60%] h-px bg-gradient-to-r from-transparent via-primary/8 to-transparent" />
+
+      {/* Geometric decorations — boosted opacity */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large circle outline top-right */}
-        <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full border border-primary/8" />
-        <div className="absolute -right-20 -top-20 h-[360px] w-[360px] rounded-full border border-primary/6" />
+        <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full border border-primary/12" />
+        <div className="absolute -right-20 -top-20 h-[360px] w-[360px] rounded-full border border-primary/10" />
         {/* Small accent rings bottom-left */}
-        <div className="absolute -bottom-16 -left-16 h-[280px] w-[280px] rounded-full border border-emerald/10" />
-        <div className="absolute -bottom-8 -left-8 h-[180px] w-[180px] rounded-full border border-emerald/8" />
+        <div className="absolute -bottom-16 -left-16 h-[280px] w-[280px] rounded-full border border-emerald/14" />
+        <div className="absolute -bottom-8 -left-8 h-[180px] w-[180px] rounded-full border border-emerald/12" />
         {/* Diagonal line cluster top-left */}
-        <svg className="absolute left-0 top-0 h-64 w-64 opacity-[0.04]" viewBox="0 0 200 200" fill="none">
+        <svg className="absolute left-0 top-0 h-64 w-64 opacity-[0.10]" viewBox="0 0 200 200" fill="none">
           <line x1="0" y1="40" x2="200" y2="240" stroke="#0b3b88" strokeWidth="1" />
           <line x1="0" y1="80" x2="200" y2="280" stroke="#0b3b88" strokeWidth="1" />
           <line x1="0" y1="120" x2="200" y2="320" stroke="#0b3b88" strokeWidth="1" />
           <line x1="0" y1="160" x2="200" y2="360" stroke="#0b3b88" strokeWidth="1" />
         </svg>
-        {/* Dot grid cluster bottom-right */}
-        <svg className="absolute bottom-12 right-8 h-48 w-48 opacity-[0.07]" viewBox="0 0 120 120" fill="#0b3b88">
+        {/* Dot grid cluster bottom-right — bigger & more visible */}
+        <svg className="absolute bottom-12 right-8 h-64 w-64 opacity-[0.14]" viewBox="0 0 120 120" fill="#0b3b88">
           {Array.from({ length: 6 }).map((_, row) =>
             Array.from({ length: 6 }).map((_, col) => (
               <circle key={`${row}-${col}`} cx={col * 20 + 10} cy={row * 20 + 10} r="1.5" />
@@ -66,6 +72,7 @@ export function Hero() {
       </div>
 
       <div className="mx-auto grid max-w-7xl items-center gap-14 lg:min-h-[calc(100svh-8.5rem)] lg:grid-cols-[1fr_1fr]">
+        {/* Left column */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -92,16 +99,24 @@ export function Hero() {
               Scopri di più
             </Link>
           </div>
+
         </motion.div>
 
+        {/* Right column — product visual */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.08 }}
-          className="relative"
+          className="relative lg:-mr-8"
         >
-          <div className="absolute -left-10 top-8 h-40 w-40 rounded-full bg-sky-300/25 blur-3xl" />
-          <div className="absolute -right-8 bottom-0 h-48 w-48 rounded-full bg-emerald/20 blur-3xl" />
+          {/* Blur glows — enlarged */}
+          <div className="absolute -left-10 top-8 h-56 w-56 rounded-full bg-sky-300/30 blur-3xl" />
+          <div className="absolute -right-8 bottom-0 h-64 w-64 rounded-full bg-emerald/25 blur-3xl" />
+
+          {/* Ground shadow */}
+          <div className="absolute -bottom-6 left-[10%] right-[10%] h-12 rounded-[50%] bg-primary/[0.06] blur-2xl" />
+
+          {/* Browser frame with 3D interaction */}
           <motion.div
             style={{ transform }}
             onMouseMove={handleMove}
@@ -131,6 +146,6 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
-    </section >
+    </section>
   );
 }

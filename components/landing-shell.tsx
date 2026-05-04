@@ -3,13 +3,11 @@
 import { useState } from "react";
 
 import { Footer } from "@/components/footer";
+import { CookieBanner } from "@/components/cookie-banner";
 import { DemoBookingModal } from "@/components/demo-booking-modal";
-import { EngagementModal } from "@/components/engagement-modal";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
-import { DemoSection } from "@/components/demo-section";
 import { FAQSection } from "@/components/faq-section";
-import { FakeChatbot } from "@/components/fake-chatbot";
-import { Hero } from "@/components/hero";
+import { HeroProduct } from "@/components/hero-product";
 import { LeadMagnetSection } from "@/components/lead-magnet-section";
 import { Navbar } from "@/components/navbar";
 import { PersonaBento } from "@/components/persona-bento";
@@ -20,6 +18,8 @@ import { Testimonials } from "@/components/testimonials";
 import { ValueReasons } from "@/components/value-reasons";
 import { WorkflowSection } from "@/components/workflow-section";
 import type { Billing, Persona } from "@/lib/site-data";
+import { Hero } from "./hero";
+import { HeroEnriched } from "./hero-enriched";
 
 export function LandingShell() {
   const [persona, setPersona] = useState<Persona>("private");
@@ -28,12 +28,11 @@ export function LandingShell() {
   return (
     <div className="pb-4">
       <Navbar persona={persona} onPersonaChange={setPersona} />
-      <EngagementModal persona={persona} />
       <DemoBookingModal persona={persona} />
       <EmailTemplatePreview />
-      <FakeChatbot persona={persona} />
-      <main className="pt-20 sm:pt-22 lg:pt-24">
-        <Hero />
+      <CookieBanner />
+      <main>
+        <HeroEnriched />
         <ValueReasons />
         <WorkflowSection />
         <PersonaSwitcher persona={persona} onChange={setPersona} />
@@ -45,7 +44,6 @@ export function LandingShell() {
           billingCycle={billingCycle}
           onBillingCycleChange={setBillingCycle}
         />
-        <DemoSection persona={persona} />
         <FAQSection />
         <LeadMagnetSection />
       </main>

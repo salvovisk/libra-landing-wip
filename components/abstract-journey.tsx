@@ -18,9 +18,6 @@ import {
   CheckCircle2,
   Bell,
   CalendarDays,
-  FolderArchive,
-  Stamp,
-  Download
 } from "lucide-react";
 
 type Step = {
@@ -55,12 +52,6 @@ const STEPS: Step[] = [
     headline: "Ricevi il promemoria per i bollettini INPS",
     subtext: "Prima di ogni scadenza trimestrale ricevi una notifica con il bollettino già calcolato e pronto da pagare."
   },
-  {
-    id: "05",
-    step: "05",
-    headline: "Fine anno: Certificazione Unica già pronta",
-    subtext: "A gennaio la CU è disponibile automaticamente per la tua dichiarazione dei redditi."
-  }
 ];
 
 const PRIMARY = "#00377e";
@@ -111,7 +102,7 @@ export function AbstractJourney() {
   return (
     <section
       id="come-funziona"
-      className="relative isolate bg-[#F8FAFC] px-6 py-24 sm:py-32"
+      className="relative isolate bg-[#F8FAFC] px-6 py-12 sm:py-16"
     >
       <BackgroundGrid />
 
@@ -150,11 +141,10 @@ export function AbstractJourney() {
                   >
                     <div className="absolute left-0 top-1 hidden lg:block">
                       <div
-                        className={`h-10 w-10 rounded-full border-2 transition ${
-                          active
-                            ? "border-primary bg-primary text-white"
-                            : "border-slate-300 bg-white text-slate-400"
-                        }`}
+                        className={`h-10 w-10 rounded-full border-2 transition ${active
+                          ? "border-primary bg-primary text-white"
+                          : "border-slate-300 bg-white text-slate-400"
+                          }`}
                       >
                         <div className="flex h-full items-center justify-center text-xs font-extrabold tracking-[0.18em]">
                           {step.step}
@@ -163,19 +153,17 @@ export function AbstractJourney() {
                     </div>
 
                     <div
-                      className={`rounded-[24px] border p-6 transition duration-300 sm:p-7 ${
-                        active
-                          ? "border-primary/15 bg-white shadow-[0_20px_45px_rgba(11,59,136,0.08)] opacity-100"
-                          : "border-transparent bg-transparent opacity-30"
-                      }`}
+                      className={`rounded-[24px] border p-6 transition duration-300 sm:p-7 ${active
+                        ? "border-primary/15 bg-white shadow-[0_20px_45px_rgba(11,59,136,0.08)] opacity-100"
+                        : "border-transparent bg-transparent opacity-30"
+                        }`}
                     >
                       <div className="mb-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.22em] text-primary lg:hidden">
                         Step {step.step}
                       </div>
                       <h3
-                        className={`text-3xl font-extrabold tracking-[-0.045em] transition ${
-                          active ? "text-primary" : "text-ink"
-                        }`}
+                        className={`text-3xl font-extrabold tracking-[-0.045em] transition ${active ? "text-primary" : "text-ink"
+                          }`}
                       >
                         {step.headline}
                       </h3>
@@ -193,7 +181,7 @@ export function AbstractJourney() {
           </div>
 
           {/* RIGHT — sticky glass theater */}
-          <div className="hidden lg:block lg:sticky lg:top-32 lg:self-start h-[580px]">
+          <div className="hidden lg:block lg:sticky lg:top-32 lg:self-start h-[420px]">
             <Theater active={activeIndex} total={STEPS.length} />
           </div>
         </div>
@@ -235,9 +223,8 @@ function Theater({
 }) {
   return (
     <div
-      className={`relative h-full w-full overflow-hidden rounded-3xl border border-white/30 bg-white/40 backdrop-blur-md shadow-[0_40px_120px_-20px_rgba(0,55,126,0.25)] ${
-        compact ? "aspect-[4/5]" : ""
-      }`}
+      className={`relative h-full w-full overflow-hidden rounded-3xl border border-white/30 bg-white/40 backdrop-blur-md shadow-[0_40px_120px_-20px_rgba(0,55,126,0.25)] ${compact ? "aspect-[4/5]" : ""
+        }`}
     >
       <GhostLayer />
 
@@ -257,7 +244,7 @@ function Theater({
 
       <ProgressRail active={active} total={total} />
 
-      <div className="absolute inset-0 z-20 flex items-center justify-center p-8">
+      <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={active}
@@ -265,13 +252,12 @@ function Theater({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.96 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-sm"
+            className="w-full max-w-md"
           >
             {active === 0 && <Panel1 />}
             {active === 1 && <Panel2 />}
             {active === 2 && <Panel3 />}
             {active === 3 && <Panel4 />}
-            {active === 4 && <Panel5 />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -363,47 +349,51 @@ function Panel2() {
 
   return (
     <div className="relative flex h-72 items-center justify-center">
-      <div className="absolute h-56 w-56 rounded-full border border-dashed border-[#00377e]/30" />
-      <div className="absolute h-40 w-40 rounded-full border border-[#00377e]/20" />
+      <div className="absolute h-56 w-56 rounded-full border border-dashed border-[#00377e]/25" />
+      <div className="absolute h-36 w-36 rounded-full border border-[#00377e]/15" />
 
       <motion.div
-        className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border border-white/70 bg-white shadow-[0_0_40px_rgba(0,55,126,0.35)]"
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 flex h-28 w-28 items-center justify-center rounded-full border border-white/70 bg-white shadow-[0_0_40px_rgba(0,55,126,0.35)]"
+        animate={{ scale: [1, 1.04, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Euro className="h-10 w-10 text-[#00377e]" strokeWidth={2.2} />
+        <Euro className="h-12 w-12 text-[#00377e]" strokeWidth={2.2} />
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{ boxShadow: "0 0 0 0 rgba(0,55,126,0.4)" }}
-          animate={{ boxShadow: ["0 0 0 0 rgba(0,55,126,0.4)", "0 0 0 20px rgba(0,55,126,0)"] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          animate={{ boxShadow: ["0 0 0 0 rgba(0,55,126,0.4)", "0 0 0 24px rgba(0,55,126,0)"] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
         />
       </motion.div>
 
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/60 bg-white/90 px-4 py-1.5 text-sm font-semibold tabular-nums text-[#00377e] shadow-md backdrop-blur-md">
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/60 bg-white/90 px-4 py-1.5 text-sm font-semibold tabular-nums text-[#00377e] shadow-md backdrop-blur-md">
         <Counter to={1284.5} />
         <span className="ml-1 text-xs text-slate-400">€ netti</span>
       </div>
 
       {chips.map((chip, i) => (
-        <OrbitChip key={chip.label} label={chip.label} angle={chip.angle} delay={0.1 + i * 0.12} />
+        <OrbitChip key={chip.label} label={chip.label} angle={chip.angle} delay={i * 0.18} />
       ))}
     </div>
   );
 }
 
 function OrbitChip({ label, angle, delay }: { label: string; angle: number; delay: number }) {
-  const r = 110;
+  const r = 112;
   const rad = (angle * Math.PI) / 180;
   const x = Math.cos(rad) * r;
   const y = Math.sin(rad) * r;
 
   return (
     <motion.div
-      className="absolute rounded-full border border-white/70 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-md"
-      initial={{ x, y, opacity: 0, scale: 0.8 }}
-      animate={{ x: [x, x, 0], y: [y, y, 0], opacity: [0, 1, 0], scale: [0.8, 1, 0.4] }}
-      transition={{ duration: 2.2, delay, repeat: Infinity, times: [0, 0.5, 1], ease: "easeInOut" }}
+      className="absolute rounded-full border border-[#00377e]/20 bg-white px-4 py-2 text-sm font-semibold text-[#00377e] shadow-[0_4px_16px_rgba(0,55,126,0.12)]"
+      style={{ x, y }}
+      initial={{ opacity: 0, scale: 0.7 }}
+      animate={{ opacity: 1, scale: [1, 1.06, 1] }}
+      transition={{
+        opacity: { delay, duration: 0.5, ease: "easeOut" },
+        scale: { delay: delay + 0.5, duration: 3.5, repeat: Infinity, ease: "easeInOut" },
+      }}
     >
       {label}
     </motion.div>
@@ -508,9 +498,8 @@ function Panel4() {
             return (
               <div
                 key={d}
-                className={`relative flex aspect-square items-center justify-center rounded-md text-[10px] font-medium ${
-                  isTarget ? "text-white" : "text-slate-400"
-                }`}
+                className={`relative flex aspect-square items-center justify-center rounded-md text-[10px] font-medium ${isTarget ? "text-white" : "text-slate-400"
+                  }`}
               >
                 {isTarget && (
                   <motion.div
@@ -557,70 +546,6 @@ function Panel4() {
           ))}
         </div>
       </motion.button>
-    </div>
-  );
-}
-
-function Panel5() {
-  return (
-    <div className="relative flex items-center justify-center">
-      <div className="relative h-56 w-56">
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute inset-0 rounded-2xl border border-white/50 bg-white/60 backdrop-blur-sm shadow-md"
-            style={{ zIndex: i }}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: i * -8, x: i * 6, opacity: 1 - i * 0.2 }}
-            transition={{ delay: 0.1 + i * 0.15, duration: 0.6 }}
-          />
-        ))}
-
-        <motion.div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl border border-white/70 bg-white p-5 shadow-xl"
-          style={{ transform: "translate(18px, -24px)" }}
-          initial={{ y: 0 }}
-          animate={{ y: [-24, -30, -24] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <FolderArchive className="h-10 w-10 text-[#00377e]" />
-          <div className="mt-2 text-xs font-semibold text-slate-800">CU 2026</div>
-          <div className="text-[10px] text-slate-400">Certificazione Unica</div>
-
-          <motion.div
-            className="mt-3 flex items-center gap-1.5 rounded-full bg-[#00377e] px-3 py-1.5 text-[10px] font-medium text-white shadow-md"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: [0, -3, 0], opacity: 1 }}
-            transition={{ opacity: { delay: 0.9 }, y: { delay: 1.1, duration: 1.6, repeat: Infinity } }}
-          >
-            <Download className="h-3 w-3" />
-            Scarica
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="absolute -right-6 -top-6 z-20 flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-[#00377e]/60 bg-white/80 backdrop-blur-md"
-          initial={{ scale: 0, rotate: -60 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 14 }}
-        >
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <svg viewBox="0 0 100 100" className="h-full w-full">
-              <defs>
-                <path id="seal-circle" d="M 50 50 m -38 0 a 38 38 0 1 1 76 0 a 38 38 0 1 1 -76 0" />
-              </defs>
-              <text className="fill-[#00377e]/70 text-[9px] font-semibold tracking-widest">
-                <textPath href="#seal-circle">• UFFICIALE • LIBRA • 2026 </textPath>
-              </text>
-            </svg>
-          </motion.div>
-          <Stamp className="h-6 w-6 text-[#00377e]" />
-        </motion.div>
-      </div>
     </div>
   );
 }
