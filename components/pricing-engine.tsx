@@ -674,6 +674,54 @@ function CheckoutModal({
   );
 }
 
+function EnterpriseCallout({ plan }: { plan: LiveBillingPlan }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className="mt-6 overflow-hidden rounded-[32px] border border-[#18499b] bg-[linear-gradient(135deg,#0d3f92_0%,#0b2f6d_100%)] shadow-[0_26px_80px_rgba(11,59,136,0.18)] ring-1 ring-inset ring-white/10"
+    >
+      <div className="flex flex-col gap-8 px-8 py-8 sm:flex-row sm:items-center sm:justify-between lg:px-12 lg:py-10">
+        <div className="flex-1">
+          <p className="text-xs font-bold uppercase tracking-[0.26em] text-blue-100/60">
+            {plan.note ?? "Custom"}
+          </p>
+          <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em] text-white sm:text-3xl">
+            {plan.name}
+          </h3>
+          <p className="mt-3 max-w-xl text-sm leading-7 text-blue-100/80">
+            {plan.description}
+          </p>
+          <ul className="mt-5 flex flex-wrap gap-3">
+            {plan.featureSummary.map((item) => (
+              <li
+                key={item}
+                className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 ring-1 ring-inset ring-white/10"
+              >
+                <Check className="h-3.5 w-3.5 text-blue-200" strokeWidth={2.4} />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex shrink-0 flex-col items-start gap-4 sm:items-end">
+          <div className="text-right">
+            <p className="text-2xl font-extrabold tracking-[-0.04em] text-white">Hai bisogno di un piano su misura?</p>
+            <p className="mt-1 text-sm font-medium text-blue-100/70">Preventivo personalizzato e onboarding dedicato.</p>
+          </div>
+          <a
+            href="mailto:info@libracolf.it?subject=Richiesta%20Enterprise"
+            className="inline-flex items-center gap-2 rounded-[14px] bg-white px-8 py-[15px] text-sm font-bold text-primary shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition hover:bg-slate-50 hover:-translate-y-0.5"
+          >
+            Contattaci
+          </a>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function PricingCardSkeleton({ count, mobile = false }: { count: number; mobile?: boolean }) {
   const items = Array.from({ length: count });
   return (
@@ -765,12 +813,19 @@ export function PricingEngine({
   const { plans: livePlans, error: plansError } = useLivePlans();
 
   const plans = livePlans?.[persona] ?? [];
+  const regularPlans = plans.filter((plan) => !plan.contactOnly);
+  const enterprisePlan = plans.find((plan) => plan.contactOnly) ?? null;
   const compareCategories = pricingEngineCopy.compare[persona];
-  const desktopGridClass = persona === "private" ? "lg:mx-auto lg:max-w-[920px] lg:grid-cols-2" : "lg:grid-cols-4";
+  const desktopGridClass =
+    regularPlans.length === 2
+      ? "lg:mx-auto lg:max-w-[920px] lg:grid-cols-2"
+      : regularPlans.length === 3
+      ? "lg:grid-cols-3"
+      : "lg:grid-cols-4";
   const personaLabel =
     pricingEngineCopy.personae.find((item) => item.id === persona)?.label ?? pricingEngineCopy.personae[0].label;
   const isLoadingPlans = !livePlans && !plansError;
-  const skeletonCount = persona === "private" ? 2 : 4;
+  const skeletonCount = persona === "private" ? 2 : 3;
   const activePlan = activePlanId ? plans.find((plan) => plan.id === activePlanId) : null;
   const activeIntent = activePlanId ? checkoutIntents[activePlanId] : null;
   const activeAmount = activePlan
@@ -832,7 +887,7 @@ export function PricingEngine({
             className={`mt-14 hidden gap-6 lg:grid ${desktopGridClass}`}
           >
             {isLoadingPlans ? <PricingCardSkeleton count={skeletonCount} /> : null}
-            {!isLoadingPlans && plans.map((plan) => {
+            {!isLoadingPlans && regularPlans.map((plan) => {
               const price = plan.prices[billingCycle];
               const amount = formatAmount(price?.amount, price?.currency);
               const monthlyAmount = formatAmount(plan.prices.monthly?.amount, plan.prices.monthly?.currency);
@@ -957,7 +1012,7 @@ export function PricingEngine({
           >
             <div className="flex snap-x snap-mandatory gap-4">
               {isLoadingPlans ? <PricingCardSkeleton count={skeletonCount} mobile /> : null}
-              {!isLoadingPlans && plans.map((plan) => {
+              {!isLoadingPlans && regularPlans.map((plan) => {
                 const price = plan.prices[billingCycle];
                 const amount = formatAmount(price?.amount, price?.currency);
                 const monthlyAmount = formatAmount(plan.prices.monthly?.amount, plan.prices.monthly?.currency);
@@ -1068,6 +1123,8 @@ export function PricingEngine({
             </div>
           </motion.div>
         </AnimatePresence>
+
+        {enterprisePlan ? <EnterpriseCallout plan={enterprisePlan} /> : null}
 
         <div className="mt-14">
           <button
