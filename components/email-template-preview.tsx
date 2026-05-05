@@ -92,7 +92,7 @@ export function EmailTemplatePreview() {
                       Preview template email
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Anteprima delle email transazionali legate alla guida PDF e alla richiesta demo.
+                      Email transazionali: abbonamento, prova gratuita, pagamento e disdetta. Più lead magnet (guida PDF, demo).
                     </p>
                   </div>
 
