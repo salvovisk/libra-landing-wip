@@ -7,7 +7,6 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { DemoBookingModal } from "@/components/demo-booking-modal";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
 import { FAQSection } from "@/components/faq-section";
-import { HeroProduct } from "@/components/hero-product";
 import { LeadMagnetSection } from "@/components/lead-magnet-section";
 import { Navbar } from "@/components/navbar";
 import { PersonaBento } from "@/components/persona-bento";
@@ -18,7 +17,6 @@ import { Testimonials } from "@/components/testimonials";
 import { ValueReasons } from "@/components/value-reasons";
 import { WorkflowSection } from "@/components/workflow-section";
 import type { Billing, Persona } from "@/lib/site-data";
-import { Hero } from "./hero";
 import { HeroEnriched } from "./hero-enriched";
 
 export function LandingShell() {
