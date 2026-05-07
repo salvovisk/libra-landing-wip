@@ -754,23 +754,3 @@ export const resourceItems = [
   },
 ];
 
-// --- Stripe helpers (server-side only) ---
-
-export function resolvePriceId(planId: string, billingCycle: Billing): string | null {
-  for (const plans of Object.values(pricingEngineCopy.plans)) {
-    const plan = plans.find((p) => p.id === planId);
-    if (!plan) continue;
-    return billingCycle === "monthly"
-      ? (plan.stripePriceIdMonthly ?? null)
-      : (plan.stripePriceIdYearly ?? null);
-  }
-  return null;
-}
-
-export function getTrialDays(planId: string): number | undefined {
-  for (const plans of Object.values(pricingEngineCopy.plans)) {
-    const plan = plans.find((p) => p.id === planId);
-    if (plan) return plan.trialDays;
-  }
-  return undefined;
-}

@@ -1,20 +1,17 @@
 "use client";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { OPEN_BOOKING_MODAL_EVENT } from "@/components/demo-booking-modal";
 
 const productLinks = [
   { label: "Come funziona", href: "#funzionalita" },
   { label: "Per chi è pensato", href: "#persona-switcher" },
   { label: "Testimonianze", href: "#testimonianze" },
   { label: "Prezzi", href: "#prezzi" },
-  { label: "Demo", href: "#demo" },
   { label: "FAQ", href: "#faq" },
   { label: "Perché Libra", href: "#vantaggi" },
 ];
 
 const utilityLinks = [
-  { label: "Richiedi una demo", href: "#book-demo" },
   { label: "Torna in alto", href: "#" },
 ];
 
@@ -42,7 +39,7 @@ export function Footer() {
     <footer className="border-t border-slate-200/80 bg-white px-6 pb-10 pt-14">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
         <div className="max-w-xl">
-          <a href="#" className="inline-flex" aria-label="Libra Colf">
+          <a href="/" className="inline-flex" aria-label="Libra Colf">
             <BrandLogo />
           </a>
           <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -82,11 +79,6 @@ export function Footer() {
                 href={link.href}
                 onClick={(event) => {
                   event.preventDefault();
-                  if (link.href === "#book-demo") {
-                    window.dispatchEvent(new CustomEvent(OPEN_BOOKING_MODAL_EVENT));
-                    return;
-                  }
-
                   scrollToAnchor(link.href);
                 }}
                 className="text-sm font-medium text-slate-600 transition hover:text-primary"

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { type MouseEvent } from "react";
+import posthog from "posthog-js";
 
 import { heroCopy } from "@/lib/site-data";
 
@@ -89,13 +90,18 @@ export function HeroEnriched() {
             {heroCopy.description}
           </p>
           <div className="mt-12 flex flex-col gap-4 sm:flex-row">
-            <button
-              type="button"
+            <Link
+              href="/#prezzi"
+              onClick={() => posthog.capture("hero_cta_clicked", { cta: "free_trial" })}
               className="inline-flex items-center justify-center gap-3 rounded-2xl bg-primary px-7 py-4 text-base font-bold text-white shadow-card transition hover:-translate-y-0.5"
             >
               Prova gratuita 30 giorni
-            </button>
-            <Link href="#funzionalita" className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 px-7 py-4 text-base font-bold text-primary backdrop-blur transition hover:bg-white">
+            </Link>
+            <Link
+              href="#funzionalita"
+              onClick={() => posthog.capture("hero_cta_clicked", { cta: "learn_more" })}
+              className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 px-7 py-4 text-base font-bold text-primary backdrop-blur transition hover:bg-white"
+            >
               Scopri di più
             </Link>
           </div>
@@ -131,7 +137,6 @@ export function HeroEnriched() {
                 <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
               </div>
               <div className="flex flex-1 items-center gap-1.5 rounded-md border border-slate-200/80 bg-white px-3 py-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald/70" />
                 <span className="font-mono text-[11px] text-slate-400">app.libracolf.it / dashboard</span>
               </div>
             </div>

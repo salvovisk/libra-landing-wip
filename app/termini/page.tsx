@@ -66,10 +66,13 @@ export default function TerminiPage() {
             4. Prova gratuita
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#5f6b84]">
-            I piani Base prevedono un periodo di prova gratuita di <strong className="text-[#0f172a]">30 giorni</strong>. Durante questo periodo non viene effettuato alcun addebito. Al termine del periodo di prova, l&apos;abbonamento si attiva automaticamente e viene addebitato il costo del piano scelto, salvo cancellazione prima della scadenza.
+            Alcuni piani prevedono un periodo di prova gratuita, la cui durata e disponibilità sono indicate nella schermata di acquisto. Durante il periodo di prova non viene effettuato alcun addebito. Al termine, l&apos;abbonamento si attiva automaticamente e viene addebitato il costo del piano scelto, salvo cancellazione prima della scadenza.
           </p>
           <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
-            Per annullare durante il periodo di prova senza costi, l&apos;utente può accedere al portale di gestione dell&apos;abbonamento tramite il link ricevuto via email da Stripe.
+            La prova gratuita è disponibile una sola volta per indirizzo email. In caso di utilizzo precedente, l&apos;abbonamento sarà attivato senza periodo di prova con addebito immediato.
+          </p>
+          <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
+            Per annullare durante il periodo di prova senza costi, l&apos;utente può accedere al portale di gestione dell&apos;abbonamento tramite il link ricevuto via email oppure scrivendo a <a href="mailto:[EMAIL]" className="font-semibold text-[#0b3b88] underline-offset-2 hover:underline">[EMAIL]</a>.
           </p>
         </section>
 

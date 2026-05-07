@@ -22,7 +22,6 @@ const NAV_RANGE_MAP: Record<string, string[]> = {
     "testimonianze",
   ],
   "#prezzi": ["prezzi"],
-  "#demo": ["demo"],
   "#faq": ["faq", "cta-finale"],
 };
 
@@ -180,7 +179,7 @@ export function Navbar({ persona, onPersonaChange }: NavbarProps) {
       <nav className="pointer-events-auto w-full max-w-[1200px] rounded-[28px] border border-white/70 bg-white/70 shadow-soft backdrop-blur-xl ring-1 ring-inset ring-black/5">
         <div className="flex min-h-[76px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-4 lg:gap-10">
-            <a href="#" className="shrink-0" aria-label="Libra Colf">
+            <a href="/" className="shrink-0" aria-label="Libra Colf">
               <BrandLogo />
             </a>
             <div className="hidden items-center gap-2 lg:flex">

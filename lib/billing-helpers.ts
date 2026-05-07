@@ -17,8 +17,13 @@ export function isItalianVatNumber(value: unknown) {
 }
 
 export function isItalianTaxCode(value: unknown) {
-  if (value == null || value === "") return true;
+  if (value == null || value === "") return false;
   return typeof value === "string" && /^[A-Za-z0-9]{11,16}$/.test(value.replace(/\s+/g, ""));
+}
+
+export function isItalianTaxCodeOptional(value: unknown) {
+  if (value == null || value === "") return true;
+  return isItalianTaxCode(value);
 }
 
 export function isItalianInvoiceDestination(value: unknown) {
@@ -40,7 +45,7 @@ export function isPaymentIntentBody(body: unknown): body is PaymentIntentBody {
       data.priceId.startsWith("price_") &&
       billing &&
       typeof billing.email === "string" &&
-      billing.email.includes("@") &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(billing.email) &&
       typeof billing.name === "string" &&
       billing.name.trim().length > 1 &&
       typeof billing.addressLine1 === "string" &&
@@ -55,8 +60,9 @@ export function isPaymentIntentBody(body: unknown): body is PaymentIntentBody {
         (
           typeof billing.companyName === "string" &&
           billing.companyName.trim().length > 1 &&
-          isItalianVatNumber(billing.vatNumber) &&
-          isItalianTaxCode(billing.taxCode) &&
+          (isItalianVatNumber(billing.vatNumber) || isItalianTaxCode(billing.taxCode)) &&
+          (billing.vatNumber == null || billing.vatNumber === "" || isItalianVatNumber(billing.vatNumber)) &&
+          (billing.taxCode == null || billing.taxCode === "" || isItalianTaxCodeOptional(billing.taxCode)) &&
           isItalianInvoiceDestination(billing.pec)
         )
       )
@@ -144,18 +150,21 @@ export function getPlanCtaLabel({
   return cta;
 }
 
-const blockingSubscriptionStatuses = new Set(["active", "trialing", "incomplete", "past_due"]);
+// "incomplete" excluded: it means payment never attempted (abandoned checkout).
+// Treating it as blocking would permanently lock an email after one abandoned form submission.
+const blockingSubscriptionStatuses = new Set(["active", "trialing", "past_due"]);
 
 export function isBlockingSubscriptionStatus(status: string) {
   return blockingSubscriptionStatuses.has(status);
 }
 
-export function hasUsedTrial(subscription: Pick<Stripe.Subscription, "trial_start" | "trial_end" | "metadata">) {
-  return Boolean(
-    subscription.metadata.trialUsed === "true" ||
-      subscription.trial_start ||
-      subscription.trial_end
-  );
+export function hasUsedTrial(subscription: Pick<Stripe.Subscription, "status" | "trial_start" | "trial_end" | "metadata">) {
+  // Only count a trial as used if Stripe actually started one (trial_start set) AND the
+  // subscription reached a non-abandoned state. Checking metadata.trialUsed alone was
+  // unreliable because it was previously written at customer-creation time, before payment.
+  const stripeTrialRan = Boolean(subscription.trial_start);
+  const wasActivated = subscription.status !== "incomplete" && subscription.status !== "incomplete_expired";
+  return stripeTrialRan && wasActivated;
 }
 
 export function hasTrialMarker(metadata: Stripe.Metadata | undefined) {

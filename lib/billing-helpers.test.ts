@@ -38,7 +38,7 @@ describe("billing helpers", () => {
     })).toBe(true);
   });
 
-  it("requires company name and VAT number when invoice is requested", () => {
+  it("requires company name and at least one of vatNumber/taxCode when invoice is requested", () => {
     expect(isPaymentIntentBody({
       priceId: "price_123",
       billingDetails: {
@@ -54,6 +54,27 @@ describe("billing helpers", () => {
         invoiceRequested: true,
         companyName: "Studio Rossi SRL",
         vatNumber: "12345678901",
+      },
+    })).toBe(true);
+
+    expect(isPaymentIntentBody({
+      priceId: "price_123",
+      billingDetails: {
+        ...validBillingDetails,
+        invoiceRequested: true,
+        companyName: "Associazione Culturale",
+        taxCode: "RSSMRA80A01H501U",
+      },
+    })).toBe(true);
+
+    expect(isPaymentIntentBody({
+      priceId: "price_123",
+      billingDetails: {
+        ...validBillingDetails,
+        invoiceRequested: true,
+        companyName: "Studio Rossi SRL",
+        vatNumber: "12345678901",
+        taxCode: "RSSMRA80A01H501U",
       },
     })).toBe(true);
   });
@@ -74,7 +95,7 @@ describe("billing helpers", () => {
 
     expect(isItalianTaxCode("RSSMRA80A01H501U")).toBe(true);
     expect(isItalianTaxCode("12345678901")).toBe(true);
-    expect(isItalianTaxCode("")).toBe(true);
+    expect(isItalianTaxCode("")).toBe(false);
 
     expect(isItalianInvoiceDestination("azienda@pec.it")).toBe(true);
     expect(isItalianInvoiceDestination("ABC1234")).toBe(true);
@@ -104,8 +125,8 @@ describe("billing helpers", () => {
     expect(resolvePersona("custom-id", undefined)).toBeNull();
 
     expect(resolveBilling({ metadata: { billing: "monthly" }, recurring: null })).toBe("monthly");
-    expect(resolveBilling({ metadata: {}, recurring: { interval: "year" } })).toBe("yearly");
-    expect(resolveBilling({ metadata: {}, recurring: { interval: "week" } })).toBeNull();
+    expect(resolveBilling({ metadata: {}, recurring: { interval: "year" } as never })).toBe("yearly");
+    expect(resolveBilling({ metadata: {}, recurring: { interval: "week" } as never })).toBeNull();
   });
 
   it("extracts client secrets from modern and legacy Stripe subscription responses", () => {
@@ -146,29 +167,43 @@ describe("billing helpers", () => {
   it("blocks duplicate checkout for statuses that can already consume a plan", () => {
     expect(isBlockingSubscriptionStatus("active")).toBe(true);
     expect(isBlockingSubscriptionStatus("trialing")).toBe(true);
-    expect(isBlockingSubscriptionStatus("incomplete")).toBe(true);
+    // incomplete = payment never attempted (abandoned checkout) — must NOT block
+    expect(isBlockingSubscriptionStatus("incomplete")).toBe(false);
     expect(isBlockingSubscriptionStatus("past_due")).toBe(true);
     expect(isBlockingSubscriptionStatus("canceled")).toBe(false);
     expect(isBlockingSubscriptionStatus("incomplete_expired")).toBe(false);
   });
 
-  it("detects previous trial usage even after the subscription is no longer active", () => {
+  it("detects previous trial usage only when Stripe actually ran a trial on an activated subscription", () => {
     expect(hasTrialMarker({ trialUsed: "true" })).toBe(true);
     expect(hasTrialMarker({ trialUsed: "false" })).toBe(false);
 
+    // Trial ran and subscription was activated — counts as used
     expect(hasUsedTrial({
+      status: "canceled",
       trial_start: 1777900000,
       trial_end: 1778000000,
       metadata: {},
     })).toBe(true);
 
+    // Trial ran but subscription was never paid (abandoned) — does NOT count
     expect(hasUsedTrial({
+      status: "incomplete",
+      trial_start: 1777900000,
+      trial_end: 1778000000,
+      metadata: {},
+    })).toBe(false);
+
+    // No trial_start — does NOT count regardless of metadata
+    expect(hasUsedTrial({
+      status: "active",
       trial_start: null,
       trial_end: null,
       metadata: { trialUsed: "true" },
-    })).toBe(true);
+    })).toBe(false);
 
     expect(hasUsedTrial({
+      status: "active",
       trial_start: null,
       trial_end: null,
       metadata: {},

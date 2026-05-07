@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 
 import {
-  getInvoiceClientSecret,
-  getSetupClientSecret,
-  hasTrialMarker,
   hasUsedTrial,
   isBlockingSubscriptionStatus,
   isPaymentIntentBody,
-  normalizeTrialDays,
   normalizeVatNumber,
-  resolveAllowedTrialDays,
 } from "@/lib/billing-helpers";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { hasStripeSecret, stripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -38,37 +34,63 @@ export async function POST(request: Request) {
     if (!product?.active) {
       return NextResponse.json({ ok: false, error: "Piano non disponibile." }, { status: 404 });
     }
-    const configuredTrialDays = normalizeTrialDays(product.metadata, price.metadata);
-    const existingCustomers = await stripe.customers.list({
-      email: body.billingDetails.email,
-      limit: 10,
-    });
+
+    // Scan all customers for this email: block if active sub exists, track trial history,
+    // collect orphan customer IDs (no subscriptions ever) for deletion.
     let previousTrialUsed = false;
+    const orphanCustomerIds: string[] = [];
+    let cursor: string | undefined;
 
-    for (const existingCustomer of existingCustomers.data) {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: existingCustomer.id,
-        status: "all",
-        limit: 10,
+    outerLoop: while (true) {
+      const existingCustomers = await stripe.customers.list({
+        email: body.billingDetails.email,
+        limit: 100,
+        ...(cursor ? { starting_after: cursor } : {}),
       });
-      const existingSubscription = subscriptions.data.find((subscription) =>
-        isBlockingSubscriptionStatus(subscription.status)
-      );
 
-      if (existingSubscription) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "Esiste già un abbonamento associato a questa email. Accedi alla piattaforma o contattaci per modificarlo.",
-          },
-          { status: 409 }
-        );
+      for (const existingCustomer of existingCustomers.data) {
+        let subCursor: string | undefined;
+        let hasAnySub = false;
+
+        while (true) {
+          const subscriptions = await stripe.subscriptions.list({
+            customer: existingCustomer.id,
+            status: "all",
+            limit: 100,
+            ...(subCursor ? { starting_after: subCursor } : {}),
+          });
+
+          if (subscriptions.data.length > 0) hasAnySub = true;
+
+          for (const sub of subscriptions.data) {
+            if (isBlockingSubscriptionStatus(sub.status)) {
+              return NextResponse.json(
+                {
+                  ok: false,
+                  error: "Esiste già un abbonamento associato a questa email. Accedi alla piattaforma o contattaci per modificarlo.",
+                },
+                { status: 409 }
+              );
+            }
+          }
+
+          previousTrialUsed ||= subscriptions.data.some((s) => hasUsedTrial(s));
+
+          if (!subscriptions.has_more) break;
+          subCursor = subscriptions.data[subscriptions.data.length - 1]!.id;
+        }
+
+        if (!hasAnySub) {
+          orphanCustomerIds.push(existingCustomer.id);
+        }
       }
 
-      previousTrialUsed ||= hasTrialMarker(existingCustomer.metadata) ||
-        subscriptions.data.some((subscription) => hasUsedTrial(subscription));
+      if (!existingCustomers.has_more) break outerLoop;
+      cursor = existingCustomers.data[existingCustomers.data.length - 1]!.id;
     }
-    const trialDays = resolveAllowedTrialDays(configuredTrialDays, previousTrialUsed);
+
+    // Delete orphan customers before creating a new one — keeps Stripe clean.
+    await Promise.all(orphanCustomerIds.map((id) => stripe.customers.del(id).catch(() => {})));
 
     const customer = await stripe.customers.create({
       email: body.billingDetails.email,
@@ -86,13 +108,12 @@ export async function POST(request: Request) {
         priceId: price.id,
         billingName: body.billingDetails.name,
         invoiceRequested: String(body.billingDetails.invoiceRequested),
-        trialUsed: configuredTrialDays > 0 || previousTrialUsed ? "true" : "false",
-        trialWaived: previousTrialUsed && configuredTrialDays > 0 ? "true" : "false",
         vatNumber: body.billingDetails.vatNumber ?? "",
         taxCode: body.billingDetails.taxCode ?? "",
         pec: body.billingDetails.pec ?? "",
       },
     });
+
     const vatNumber = normalizeVatNumber(body.billingDetails.vatNumber);
     if (body.billingDetails.invoiceRequested && vatNumber) {
       await stripe.customers.createTaxId(customer.id, {
@@ -103,63 +124,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: price.id }],
-      payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice", "pending_setup_intent"],
-      ...(trialDays > 0 ? { trial_period_days: trialDays } : {}),
-      metadata: {
-        planId: price.metadata.planId || product.metadata.planId || "",
-        priceId: price.id,
-        trialUsed: configuredTrialDays > 0 || previousTrialUsed ? "true" : "false",
-        trialWaived: previousTrialUsed && configuredTrialDays > 0 ? "true" : "false",
-      },
-    });
-
-    const invoice = typeof subscription.latest_invoice === "string" ? null : subscription.latest_invoice;
-    const paymentClientSecret = getInvoiceClientSecret(invoice);
-
-    if (paymentClientSecret) {
-      return NextResponse.json({
-        ok: true,
-        clientSecret: paymentClientSecret,
-        intentType: "payment",
-        subscriptionId: subscription.id,
-        trialWaived: previousTrialUsed && configuredTrialDays > 0,
-      });
-    }
-
-    const setupClientSecret = getSetupClientSecret(subscription);
-    if (setupClientSecret) {
-      return NextResponse.json({
-        ok: true,
-        clientSecret: setupClientSecret,
-        intentType: "setup",
-        subscriptionId: subscription.id,
-        trialWaived: previousTrialUsed && configuredTrialDays > 0,
-      });
-    }
-
-    console.warn("[billing/payment-intent] Falling back to setup intent", {
-      subscriptionId: subscription.id,
-      subscriptionStatus: subscription.status,
-      latestInvoice: invoice
-        ? {
-            id: invoice.id,
-            status: invoice.status,
-            amountDue: invoice.amount_due,
-            confirmationSecret: Boolean(invoice.confirmation_secret),
-          }
-        : null,
-      pendingSetupIntent: Boolean(subscription.pending_setup_intent),
-    });
-
-    if (subscription.status === "incomplete") {
-      await stripe.subscriptions.cancel(subscription.id);
-    }
-
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
       usage: "off_session",
@@ -167,8 +131,6 @@ export async function POST(request: Request) {
       metadata: {
         planId: price.metadata.planId || product.metadata.planId || "",
         priceId: price.id,
-        trialUsed: configuredTrialDays > 0 || previousTrialUsed ? "true" : "false",
-        trialWaived: previousTrialUsed && configuredTrialDays > 0 ? "true" : "false",
       },
     });
 
@@ -176,13 +138,40 @@ export async function POST(request: Request) {
       throw new Error("Missing SetupIntent client secret.");
     }
 
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: body.billingDetails.email,
+      event: "checkout_initiated",
+      properties: {
+        price_id: price.id,
+        plan_id: price.metadata.planId || product.metadata.planId || "",
+        plan_name: product.name,
+        amount: price.unit_amount,
+        currency: price.currency,
+        billing_interval: price.recurring?.interval,
+        trial_waived: previousTrialUsed,
+        invoice_requested: body.billingDetails.invoiceRequested,
+      },
+    });
+    posthog.identify({
+      distinctId: body.billingDetails.email,
+      properties: {
+        email: body.billingDetails.email,
+        name: body.billingDetails.name,
+        plan_id: price.metadata.planId || product.metadata.planId || "",
+        plan_name: product.name,
+        billing_interval: price.recurring?.interval,
+        invoice_requested: body.billingDetails.invoiceRequested,
+      },
+    });
+
     return NextResponse.json({
       ok: true,
       clientSecret: setupIntent.client_secret,
       intentType: "setup",
       customerId: customer.id,
       priceId: price.id,
-      trialWaived: previousTrialUsed && configuredTrialDays > 0,
+      trialWaived: previousTrialUsed,
     });
   } catch (err) {
     console.error("[billing/payment-intent]", err);

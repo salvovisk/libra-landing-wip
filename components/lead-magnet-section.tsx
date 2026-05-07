@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-import { OPEN_BOOKING_MODAL_EVENT } from "@/components/demo-booking-modal";
+import posthog from "posthog-js";
 
 export function LeadMagnetSection() {
   return (
@@ -25,20 +24,14 @@ export function LeadMagnetSection() {
             Oltre 3.200 famiglie hanno già scelto di gestire il lavoro domestico senza stress.
           </p>
 
-          <div className="mt-10 flex w-full max-w-[700px] flex-col gap-4 sm:flex-row sm:justify-center">
+          <div className="mt-10">
             <a
               href="#prezzi"
-              className="inline-flex min-h-[74px] flex-1 items-center justify-center rounded-[14px] bg-white px-8 text-lg font-extrabold text-[#23458c] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#264b96]"
+              onClick={() => posthog.capture("lead_magnet_cta_clicked")}
+              className="inline-flex min-h-[74px] items-center justify-center rounded-[14px] bg-white px-12 text-lg font-extrabold text-[#23458c] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#264b96]"
             >
               Scegli il tuo piano
             </a>
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent(OPEN_BOOKING_MODAL_EVENT))}
-              className="inline-flex min-h-[74px] flex-1 items-center justify-center rounded-[14px] border-2 border-white/80 bg-transparent px-8 text-lg font-extrabold text-white transition hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#264b96]"
-            >
-              Prenota una demo gratuita
-            </button>
           </div>
         </motion.div>
       </div>

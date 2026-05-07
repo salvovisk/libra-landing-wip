@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import posthog from "posthog-js";
 
 const STORAGE_KEY = "libra_cookie_consent";
 
@@ -11,16 +12,24 @@ export function CookieBanner() {
 
   useEffect(() => {
     const consent = localStorage.getItem(STORAGE_KEY);
-    if (!consent) setVisible(true);
+    if (consent === "accepted") {
+      posthog.opt_in_capturing();
+    } else if (!consent) {
+      setVisible(true);
+    }
+    // "declined" → posthog stays opted out (default)
   }, []);
 
   function accept() {
     localStorage.setItem(STORAGE_KEY, "accepted");
+    posthog.opt_in_capturing();
+    posthog.capture("cookie_consent_accepted");
     setVisible(false);
   }
 
   function decline() {
     localStorage.setItem(STORAGE_KEY, "declined");
+    posthog.opt_out_capturing();
     setVisible(false);
   }
 
@@ -36,7 +45,7 @@ export function CookieBanner() {
         >
           <div className="rounded-[20px] border border-slate-200/80 bg-white/95 px-5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.14)] backdrop-blur-xl ring-1 ring-inset ring-black/5 sm:flex sm:items-center sm:gap-6 sm:px-6 sm:py-4">
             <p className="text-sm leading-6 text-slate-600">
-              Utilizziamo cookie tecnici per il corretto funzionamento del sito.{" "}
+              Utilizziamo cookie analitici e tecnici per migliorare il sito.{" "}
               <Link href="/privacy#cookie" className="font-semibold text-primary underline-offset-2 hover:underline">
                 Cookie policy
               </Link>

@@ -4,8 +4,6 @@ import { useState } from "react";
 
 import { Footer } from "@/components/footer";
 import { CookieBanner } from "@/components/cookie-banner";
-import { DemoBookingModal } from "@/components/demo-booking-modal";
-import { EmailTemplatePreview } from "@/components/email-template-preview";
 import { FAQSection } from "@/components/faq-section";
 import { LeadMagnetSection } from "@/components/lead-magnet-section";
 import { Navbar } from "@/components/navbar";
@@ -26,8 +24,6 @@ export function LandingShell() {
   return (
     <div className="pb-4">
       <Navbar persona={persona} onPersonaChange={setPersona} />
-      <DemoBookingModal persona={persona} />
-      <EmailTemplatePreview />
       <CookieBanner />
       <main>
         <HeroEnriched />

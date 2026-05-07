@@ -5,6 +5,7 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import type { Appearance, SetupIntent } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { Check, Loader2 } from "lucide-react";
+import posthog from "posthog-js";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -35,7 +36,6 @@ function CheckoutForm({
   subscriptionId,
   customerId,
   priceId,
-  featured,
   onSuccess,
 }: EmbeddedCheckoutProps) {
   const stripe = useStripe();
@@ -51,18 +51,25 @@ function CheckoutForm({
     setSubmitting(true);
     setError(null);
 
+    posthog.capture("checkout_payment_submitted", { intent_type: intentType, price_id: priceId });
+
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setError(submitError.message ?? "Controlla i dati di pagamento.");
+      posthog.capture("checkout_error", { error: submitError.message, stage: "submit", price_id: priceId });
       setSubmitting(false);
       return;
     }
+
+    // Use a dedicated return URL so 3DS redirects land on the success page,
+    // not back on the homepage with dangling Stripe query params.
+    const returnUrl = `${window.location.origin}/checkout/success`;
 
     if (intentType === "setup") {
       const result = await stripe.confirmSetup({
         elements,
         confirmParams: {
-          return_url: window.location.href,
+          return_url: returnUrl,
         },
         redirect: "if_required",
       });
@@ -74,6 +81,7 @@ function CheckoutForm({
 
       if (result.error && !alreadySucceeded) {
         setError(result.error.message ?? "Pagamento non riuscito. Riprova.");
+        posthog.capture("checkout_error", { error: result.error.message, error_code: result.error.code, stage: "confirm_setup", price_id: priceId });
         setSubmitting(false);
         return;
       }
@@ -87,12 +95,9 @@ function CheckoutForm({
           : null;
       const setupIntentId = setupIntent?.id ?? getIntentIdFromClientSecret(clientSecret);
 
-      if (subscriptionId) {
-        setSubmitting(false);
-        onSuccess();
-        return;
-      }
-
+      // When subscriptionId is present the sub was already created server-side via the
+      // pending_setup_intent path — do NOT skip activation; call /subscription to attach
+      // the confirmed PM and activate it.
       if (!customerId || !priceId || !setupIntentId) {
         setError("Pagamento salvato, ma non siamo riusciti ad attivare l'abbonamento.");
         setSubmitting(false);
@@ -109,10 +114,19 @@ function CheckoutForm({
           setupIntentId,
         }),
       });
-      const subscriptionData: { ok: boolean; error?: string } = await subscriptionRes.json();
 
+      if (!subscriptionRes.ok) {
+        const subscriptionData: { ok: boolean; error?: string } = await subscriptionRes.json().catch(() => ({ ok: false }));
+        setError(subscriptionData.error ?? "Pagamento salvato, ma abbonamento non attivato.");
+        posthog.capture("checkout_error", { error: subscriptionData.error, stage: "activate_subscription", price_id: priceId });
+        setSubmitting(false);
+        return;
+      }
+
+      const subscriptionData: { ok: boolean; error?: string } = await subscriptionRes.json();
       if (!subscriptionData.ok) {
         setError(subscriptionData.error ?? "Pagamento salvato, ma abbonamento non attivato.");
+        posthog.capture("checkout_error", { error: subscriptionData.error, stage: "activate_subscription", price_id: priceId });
         setSubmitting(false);
         return;
       }
@@ -120,18 +134,20 @@ function CheckoutForm({
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.href,
+          return_url: returnUrl,
         },
         redirect: "if_required",
       });
 
       if (result.error) {
         setError(result.error.message ?? "Pagamento non riuscito. Riprova.");
+        posthog.capture("checkout_error", { error: result.error.message, error_code: result.error.code, stage: "confirm_payment", price_id: priceId });
         setSubmitting(false);
         return;
       }
     }
 
+    posthog.capture("checkout_completed", { intent_type: intentType, price_id: priceId });
     setSubmitting(false);
     onSuccess();
   }
@@ -148,7 +164,7 @@ function CheckoutForm({
         </div>
       </div>
       {error ? (
-        <p className={`text-sm font-medium ${featured ? "text-rose-100" : "text-rose-500"}`}>
+        <p className="text-sm font-medium text-rose-500">
           {error}
         </p>
       ) : null}
@@ -166,11 +182,7 @@ function CheckoutForm({
       <button
         type="submit"
         disabled={!stripe || submitting}
-        className={`flex w-full items-center justify-center gap-2 rounded-[14px] px-[22px] py-[15px] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${
-          featured
-            ? "bg-white text-primary hover:bg-slate-50"
-            : "bg-primary text-white hover:-translate-y-0.5 hover:bg-[#0a3478]"
-        }`}
+        className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-[22px] py-[15px] text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#0a3478] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {submitting ? (
           <>

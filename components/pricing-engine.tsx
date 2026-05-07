@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Loader2, Minus, X } from "lucide-react";
+import posthog from "posthog-js";
 
 import { CheckoutSuccess, EmbeddedCheckout } from "@/components/embedded-checkout";
 import { getPlanCtaLabel } from "@/lib/billing-helpers";
@@ -239,6 +240,7 @@ function useCheckout() {
   const [checkoutIntents, setCheckoutIntents] = useState<Record<string, CheckoutIntent>>({});
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [billingReady, setBillingReady] = useState(false);
   const [billingDetails, setBillingDetails] = useState<BillingDetails>({
     email: "",
     name: "",
@@ -264,13 +266,23 @@ function useCheckout() {
     setBillingDetails((current) => ({ ...current, [field]: value }));
   }
 
-  function openCheckoutModal(plan: LiveBillingPlan, billingCycle: Billing) {
+  function openCheckoutModal(plan: LiveBillingPlan, billingCycle: Billing, persona: string) {
     if (plan.contactOnly) return;
     const priceId = plan.prices[billingCycle]?.priceId;
     if (!priceId) return;
 
+    posthog.capture("plan_cta_clicked", {
+      plan_id: plan.id,
+      plan_name: plan.name,
+      billing_cycle: billingCycle,
+      price_id: priceId,
+      trial_days: plan.trialDays ?? 0,
+      persona,
+    });
+
     setErrorId(null);
     setSuccessId(null);
+    setBillingReady(false);
     setActivePlanId(plan.id);
   }
 
@@ -279,7 +291,7 @@ function useCheckout() {
     errorTimeoutRef.current = setTimeout(() => setErrorId(null), 4000);
   }
 
-  async function prepareCheckout(plan: LiveBillingPlan, billingCycle: Billing) {
+  async function prepareCheckout(plan: LiveBillingPlan, billingCycle: Billing, persona: string) {
     const priceId = plan.prices[billingCycle]?.priceId;
     if (!priceId) return false;
 
@@ -306,7 +318,7 @@ function useCheckout() {
       if (!data.ok || !data.clientSecret || !data.intentType) {
         setErrorId(plan.id);
         setErrorMessage(data.error ?? "Controlla i dati e riprova.");
-        scheduleErrorClear();
+        if (res.status !== 409) scheduleErrorClear();
         return false;
       }
 
@@ -321,6 +333,15 @@ function useCheckout() {
           trialWaived: data.trialWaived,
         },
       }));
+      posthog.capture("checkout_opened", {
+        plan_id: plan.id,
+        plan_name: plan.name,
+        billing_cycle: billingCycle,
+        price_id: data.priceId,
+        trial_waived: data.trialWaived ?? false,
+        persona,
+      });
+      posthog.capture("$set", { $set_once: { first_plan_viewed: plan.name, first_billing_cycle: billingCycle, first_persona: persona } });
       setActivePlanId(plan.id);
       return true;
     } catch {
@@ -346,6 +367,8 @@ function useCheckout() {
     setActivePlanId,
     successId,
     setSuccessId,
+    billingReady,
+    setBillingReady,
   };
 }
 
@@ -372,6 +395,9 @@ function CheckoutModal({
   errorMessage,
   billingDetails,
   updateBillingDetails,
+  billingReady,
+  onBillingReady,
+  onBillingReset,
   onClose,
   onPrepare,
   onSuccess,
@@ -386,6 +412,9 @@ function CheckoutModal({
   errorMessage: string | null;
   billingDetails: BillingDetails;
   updateBillingDetails: (field: keyof BillingDetails, value: string | boolean) => void;
+  billingReady: boolean;
+  onBillingReady: () => void;
+  onBillingReset: () => void;
   onClose: () => void;
   onPrepare: () => Promise<boolean>;
   onSuccess: () => void;
@@ -406,9 +435,17 @@ function CheckoutModal({
     };
   }, []);
 
-  async function handleBillingSubmit(event: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (billingReady && !intent && !success) {
+      onPrepare().then((ok) => {
+        if (!ok) onBillingReset();
+      });
+    }
+  }, [billingReady, intent, success]);
+
+  function handleBillingSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await onPrepare();
+    onBillingReady();
   }
 
   const inputClass =
@@ -460,9 +497,9 @@ function CheckoutModal({
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-xs font-semibold">
-              <span className={!intent ? "text-ink" : "text-muted"}>1 · Dati</span>
+              <span className={!intent && !billingReady ? "text-ink" : "text-muted"}>1 · Dati</span>
               <span className="text-slate-300">—</span>
-              <span className={intent ? "text-ink" : "text-muted"}>2 · Pagamento</span>
+              <span className={intent || billingReady ? "text-ink" : "text-muted"}>2 · Pagamento</span>
             </div>
 
             <div className="mt-6 rounded-[24px] border border-line bg-surface px-4 py-4 sm:px-5">
@@ -500,6 +537,11 @@ function CheckoutModal({
                 featured={plan.featured}
                 onSuccess={onSuccess}
               />
+            ) : billingReady ? (
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm font-medium text-muted">Preparazione pagamento...</p>
+              </div>
             ) : (
               <form onSubmit={handleBillingSubmit} className="mt-6 space-y-4">
               {plan.trialDays && plan.trialDays > 0 ? (
@@ -579,7 +621,7 @@ function CheckoutModal({
                 <span>
                   <span className="block text-sm font-bold text-ink">Richiedo fattura</span>
                   <span className="mt-1 block text-sm leading-6 text-muted">
-                    Inserisci partita IVA e dati fiscali per la fatturazione italiana.
+                    Inserisci partita IVA o codice fiscale per la fatturazione italiana.
                   </span>
                 </span>
               </label>
@@ -597,10 +639,13 @@ function CheckoutModal({
                     />
                   </label>
                   <label className="space-y-2">
-                    <span className={labelClass}>Partita IVA</span>
+                    <span className={labelClass}>
+                      Partita IVA
+                      {!billingDetails.taxCode && <span className="ml-1 text-rose-500">*</span>}
+                    </span>
                     <input
                       className={inputClass}
-                      required
+                      required={!billingDetails.taxCode}
                       placeholder="IT12345678901"
                       inputMode="text"
                       pattern="^(IT)?[0-9]{11}$"
@@ -611,16 +656,22 @@ function CheckoutModal({
                     <span className="block text-xs leading-5 text-muted">11 cifre, con o senza prefisso IT.</span>
                   </label>
                   <label className="space-y-2">
-                    <span className={labelClass}>Codice fiscale</span>
+                    <span className={labelClass}>
+                      Codice fiscale
+                      {!billingDetails.vatNumber && <span className="ml-1 text-rose-500">*</span>}
+                    </span>
                     <input
                       className={inputClass}
+                      required={!billingDetails.vatNumber}
                       placeholder="RSSMRA80A01H501U"
                       pattern="^[A-Za-z0-9]{11,16}$"
                       title="Inserisci un codice fiscale valido: 16 caratteri per persone fisiche o 11 cifre per aziende."
                       value={billingDetails.taxCode}
                       onChange={(event) => updateBillingDetails("taxCode", event.target.value)}
                     />
-                    <span className="block text-xs leading-5 text-muted">Opzionale: 16 caratteri o 11 cifre.</span>
+                    <span className="block text-xs leading-5 text-muted">
+                      {billingDetails.vatNumber ? "Opzionale se hai la Partita IVA." : "16 caratteri o 11 cifre."}
+                    </span>
                   </label>
                   <label className="space-y-2 sm:col-span-2">
                     <span className={labelClass}>PEC o codice destinatario</span>
@@ -809,6 +860,8 @@ export function PricingEngine({
     setActivePlanId,
     successId,
     setSuccessId,
+    billingReady,
+    setBillingReady,
   } = useCheckout();
   const { plans: livePlans, error: plansError } = useLivePlans();
 
@@ -852,7 +905,7 @@ export function PricingEngine({
 
           <div className="inline-flex w-full max-w-[360px] rounded-[24px] border border-slate-200/90 bg-white/92 p-1.5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] backdrop-blur-xl ring-1 ring-inset ring-black/5">
             <button
-              onClick={() => onBillingCycleChange("monthly")}
+              onClick={() => { posthog.capture("billing_cycle_changed", { billing_cycle: "monthly" }); onBillingCycleChange("monthly"); }}
               className={`flex-1 rounded-[18px] px-5 py-3 text-sm font-semibold transition ${billingCycle === "monthly"
                 ? "bg-primary text-white shadow-card"
                 : "text-slate-600 hover:bg-slate-100"
@@ -861,7 +914,7 @@ export function PricingEngine({
               {pricingEngineCopy.billing.monthly}
             </button>
             <button
-              onClick={() => onBillingCycleChange("yearly")}
+              onClick={() => { posthog.capture("billing_cycle_changed", { billing_cycle: "yearly" }); onBillingCycleChange("yearly"); }}
               className={`flex-1 rounded-[18px] px-5 py-3 text-sm font-semibold transition ${billingCycle === "yearly"
                 ? "bg-primary text-white shadow-card"
                 : "text-slate-600 hover:bg-slate-100"
@@ -971,7 +1024,7 @@ export function PricingEngine({
                   ) : (
                     <div>
                       <button
-                        onClick={() => openCheckoutModal(plan, billingCycle)}
+                        onClick={() => openCheckoutModal(plan, billingCycle, persona)}
                         disabled={loadingId === plan.id || !price}
                         aria-busy={loadingId === plan.id}
                         className={`mt-8 flex w-full items-center justify-center gap-2 rounded-[14px] px-[22px] py-[15px] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${plan.featured
@@ -1095,7 +1148,7 @@ export function PricingEngine({
                   ) : (
                     <div>
                       <button
-                        onClick={() => openCheckoutModal(plan, billingCycle)}
+                        onClick={() => openCheckoutModal(plan, billingCycle, persona)}
                         disabled={loadingId === plan.id || !price}
                         aria-busy={loadingId === plan.id}
                         className={`mt-8 flex w-full items-center justify-center gap-2 rounded-[14px] px-[22px] py-[15px] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${plan.featured
@@ -1128,7 +1181,11 @@ export function PricingEngine({
 
         <div className="mt-14">
           <button
-            onClick={() => setCompareOpen((open) => !open)}
+            onClick={() => {
+              const next = !compareOpen;
+              setCompareOpen(next);
+              if (next) posthog.capture("compare_plans_opened", { persona, billing_cycle: billingCycle });
+            }}
             className="group inline-flex items-center gap-3 rounded-full border border-slate-200/90 bg-white/92 px-5 py-3 text-sm font-semibold text-ink shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl ring-1 ring-inset ring-black/5 transition hover:bg-white"
           >
             <span>Confronta Piani</span>
@@ -1170,11 +1227,23 @@ export function PricingEngine({
           errorMessage={errorMessage}
           billingDetails={billingDetails}
           updateBillingDetails={updateBillingDetails}
+          billingReady={billingReady}
+          onBillingReady={() => setBillingReady(true)}
+          onBillingReset={() => setBillingReady(false)}
           onClose={() => {
+            if (successId !== activePlan.id) {
+              posthog.capture("checkout_abandoned", {
+                plan_id: activePlan.id,
+                plan_name: activePlan.name,
+                billing_cycle: billingCycle,
+                persona,
+              });
+            }
             setActivePlanId(null);
             setSuccessId(null);
+            setBillingReady(false);
           }}
-          onPrepare={() => prepareCheckout(activePlan, billingCycle)}
+          onPrepare={() => prepareCheckout(activePlan, billingCycle, persona)}
           onSuccess={() => setSuccessId(activePlan.id)}
         />
       ) : null}

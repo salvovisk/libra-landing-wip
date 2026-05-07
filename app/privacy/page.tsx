@@ -51,7 +51,7 @@ export default function PrivacyPage() {
             2. Dati raccolti su questo sito
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#5f6b84]">
-            Questo sito raccoglie esclusivamente i seguenti dati:
+            Questo sito raccoglie i seguenti dati:
           </p>
           <ul className="mt-4 space-y-3 text-sm leading-7 text-[#5f6b84]">
             <li className="flex gap-3">
@@ -65,6 +65,10 @@ export default function PrivacyPage() {
             <li className="flex gap-3">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0b3b88]/40" />
               <span><strong className="text-[#0f172a]">Dati tecnici di navigazione</strong> — indirizzo IP, tipo di browser, sistema operativo, raccolti automaticamente dai server per finalità di sicurezza e log tecnici. Non vengono utilizzati per profilazione.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0b3b88]/40" />
+              <span><strong className="text-[#0f172a]">Dati di navigazione e comportamento sul sito</strong> — raccolti tramite PostHog (piattaforma di analisi), <em>previo consenso dell&apos;utente</em>. Includono: pagine visitate, interazioni con elementi del sito (es. clic sui piani, avvio del checkout), tipo di dispositivo e browser, indirizzo IP anonimizzato. Nessun dato identificativo viene raccolto senza consenso.</span>
             </li>
           </ul>
         </section>
@@ -86,6 +90,10 @@ export default function PrivacyPage() {
               <p className="font-semibold text-[#0f172a]">Log tecnici — Sicurezza</p>
               <p className="mt-1">Base giuridica: <em>legittimo interesse</em> (Art. 6, par. 1, lett. f del GDPR) alla sicurezza informatica e al corretto funzionamento del sito.</p>
             </div>
+            <div className="rounded-2xl border border-[#dbe3f0] px-5 py-4">
+              <p className="font-semibold text-[#0f172a]">Analisi comportamentale — Miglioramento del servizio</p>
+              <p className="mt-1">Base giuridica: <em>consenso dell&apos;interessato</em> (Art. 6, par. 1, lett. a del GDPR). Il consenso è prestato tramite il banner cookie al primo accesso ed è revocabile in qualsiasi momento tramite le impostazioni del browser o scrivendo a <a href="mailto:[EMAIL]" className="font-semibold text-[#0b3b88] underline-offset-2 hover:underline">[EMAIL]</a>.</p>
+            </div>
           </div>
         </section>
 
@@ -95,6 +103,9 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#5f6b84]">
             I dati di pagamento sono trattati da <strong className="text-[#0f172a]">Stripe Inc.</strong> (USA) in qualità di responsabile del trattamento. Il trasferimento avviene nel rispetto del GDPR tramite le Clausole Contrattuali Standard approvate dalla Commissione Europea. Per maggiori informazioni: <a href="https://stripe.com/it/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0b3b88] underline-offset-2 hover:underline">Privacy Policy di Stripe</a>.
+          </p>
+          <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
+            I dati di analisi comportamentale sono trattati da <strong className="text-[#0f172a]">PostHog Inc.</strong> (USA) tramite server localizzati nell&apos;Unione Europea (regione EU). Il trasferimento avviene nel rispetto del GDPR tramite le Clausole Contrattuali Standard. Per maggiori informazioni: <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0b3b88] underline-offset-2 hover:underline">Privacy Policy di PostHog</a>.
           </p>
           <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
             I dati non vengono venduti né ceduti a terze parti per scopi di marketing.
@@ -152,13 +163,29 @@ export default function PrivacyPage() {
             7. Cookie e tecnologie simili
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#5f6b84]">
-            Questo sito utilizza esclusivamente <strong className="text-[#0f172a]">cookie tecnici necessari</strong>. In particolare, viene salvata nel <em>localStorage</em> del browser la preferenza espressa dall&apos;utente in merito all&apos;utilizzo dei cookie (chiave: <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">libra_cookie_consent</code>).
+            Questo sito utilizza due categorie di cookie e tecnologie di archiviazione locale:
+          </p>
+          <div className="mt-4 space-y-4 text-sm leading-7 text-[#5f6b84]">
+            <div className="rounded-2xl border border-[#dbe3f0] px-5 py-4">
+              <p className="font-semibold text-[#0f172a]">Cookie tecnici (necessari)</p>
+              <ul className="mt-2 space-y-1">
+                <li>— <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">libra_cookie_consent</code> (localStorage) — salva la preferenza cookie dell&apos;utente. Durata: permanente fino a cancellazione manuale.</li>
+              </ul>
+              <p className="mt-2">Questi dati sono necessari per ricordare la scelta dell&apos;utente e non richiedono consenso.</p>
+            </div>
+            <div className="rounded-2xl border border-[#dbe3f0] px-5 py-4">
+              <p className="font-semibold text-[#0f172a]">Cookie analitici (previo consenso)</p>
+              <ul className="mt-2 space-y-1">
+                <li>— Cookie PostHog (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">ph_*</code>) — analisi del comportamento degli utenti sul sito. Finalità: miglioramento dell&apos;esperienza utente e delle funzionalità del sito. Durata: fino a 1 anno. Fornitore: PostHog Inc., server EU.</li>
+              </ul>
+              <p className="mt-2">Questi cookie vengono attivati solo dopo il consenso esplicito tramite il banner al primo accesso.</p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm leading-7 text-[#5f6b84]">
+            L&apos;utente può revocare il consenso in qualsiasi momento eliminando la chiave <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">libra_cookie_consent</code> dal localStorage del browser (Strumenti sviluppatore → Application → Local Storage) e ricaricando la pagina, oppure scrivendo a <a href="mailto:[EMAIL]" className="font-semibold text-[#0b3b88] underline-offset-2 hover:underline">[EMAIL]</a>.
           </p>
           <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
-            Non vengono utilizzati cookie di profilazione, cookie di terze parti per pubblicità né sistemi di analisi comportamentale su questo sito.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-[#5f6b84]">
-            L&apos;utente può eliminare i dati salvati nel localStorage in qualsiasi momento tramite le impostazioni del proprio browser.
+            Non vengono utilizzati cookie di profilazione o cookie di terze parti per scopi pubblicitari.
           </p>
         </section>
 
